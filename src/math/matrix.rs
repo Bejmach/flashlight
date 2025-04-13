@@ -3,7 +3,7 @@ use std::fmt;
 pub struct Matrix{
     width: usize,
     height: usize,
-    matrix: Vec<Vec<i32>>,
+    matrix: Vec<Vec<f32>>,
 }
 
 impl Matrix{
@@ -11,10 +11,10 @@ impl Matrix{
         Self{
             width: _width,
             height: _height,
-            matrix: vec![vec![0; _width]; _height],
+            matrix: vec![vec![0.0; _width]; _height],
         }
     }
-    pub fn from_vec(vec: Vec<Vec<i32>>) -> Self{
+    pub fn from_vec(vec: Vec<Vec<f32>>) -> Self{
         Self{
             width: vec[0].len(),
             height: vec.len(),
@@ -22,14 +22,14 @@ impl Matrix{
         }
     }
 
-    pub fn row(&self, n: usize) -> Option<Vec<i32>>{
+    pub fn row(&self, n: usize) -> Option<Vec<f32>>{
         match self.matrix.get(n){
             Some(row) => return Some(row.to_vec()),
             None => return None,
         }
     }
-    pub fn col(&self, n: usize) -> Option<Vec<i32>>{
-        let mut return_vec: Vec<i32> = Vec::with_capacity(self.matrix.len());
+    pub fn col(&self, n: usize) -> Option<Vec<f32>>{
+        let mut return_vec: Vec<f32> = Vec::with_capacity(self.matrix.len());
 
         for arr in self.matrix.iter(){
             match arr.get(n){
@@ -40,14 +40,14 @@ impl Matrix{
 
         Some(return_vec)
     }
-    pub fn set(&mut self, x: usize, y: usize, value: i32){
+    pub fn set(&mut self, x: usize, y: usize, value: f32){
         if x>self.width-1 || y>self.height-1{
             return;
         }
 
         self.matrix[y][x] = value;
     }
-    pub fn get(&self, x: usize, y: usize) -> Option<i32>{
+    pub fn get(&self, x: usize, y: usize) -> Option<f32>{
         if x>self.width-1 || y>self.height-1{
             return None;
         }
@@ -87,12 +87,12 @@ impl fmt::Display for Matrix{
     }
 }
 
-pub fn dot_product(vec1: Vec<i32>, vec2: Vec<i32>) -> Option<i32>{
+pub fn dot_product(vec1: Vec<f32>, vec2: Vec<f32>) -> Option<f32>{
     if vec1.len() != vec2.len() {
         return None;
     }
     
-    let mut returner = 0;
+    let mut returner: f32 = 0.0;
 
     for i in 0..vec1.len(){
         returner += vec1[i] * vec2[i];
