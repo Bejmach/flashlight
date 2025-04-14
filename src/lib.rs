@@ -24,8 +24,10 @@ impl NeuralNetwork{
         for i in 1.._layers.len(){
             let mut weights_matrix: Matrix = Matrix::new(_layers[i-1], _layers[i]);
             let mut biases_matrix: Matrix = Matrix::new(_layers[i], 1);
-            for j in 0.._layers[i]{
-                biases_matrix.set(j, 0, rng.random_range(0.0..10.0))
+            if i != _layers.len()-1{
+                for j in 0.._layers[i]{
+                    biases_matrix.set(j, 0, rng.random_range(0.0..10.0))
+                }
             }
             for j in 0.._layers[i-1]{
                 for k in 0.._layers[i]{
