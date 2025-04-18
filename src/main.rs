@@ -1,7 +1,8 @@
 use flashlight::NeuralNetwork;
+use flashlight::math::tensor::Tensor;
 
-fn main() {
 
+fn default_propagation(){
     let network_layut: Vec<usize> = vec!{3, 4, 4, 2};
     
     print!("Network layout: ");
@@ -23,5 +24,21 @@ fn main() {
         print!("{}, ", arg);
     }
     println!("}}");
+}
 
+fn main() {
+    let tensor: Tensor<f32> = Tensor::rand_f32(vec![3, 3, 3], 100.0);
+
+    let vector = tensor.vector(vec![1, 0]);
+
+    println!("Tensor: ");
+    for arg in tensor.data{
+        print!("{}, ", arg);
+    }
+    println!("\n\nVector: ");
+
+    for arg in vector.unwrap().data{
+        print!("{}, ", arg);
+    }
+    println!("");
 }
