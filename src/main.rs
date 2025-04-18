@@ -29,16 +29,36 @@ fn default_propagation(){
 fn main() {
     let tensor: Tensor<f32> = Tensor::rand_f32(vec![3, 3, 3], 100.0);
 
-    let vector = tensor.vector(vec![1, 0]);
+    let vector1 = tensor.vector(&[0, 0]).unwrap();
+    let vector2 = tensor.vector(&[0, 1]).unwrap();
 
+    
     println!("Tensor: ");
     for arg in tensor.data{
         print!("{}, ", arg);
     }
-    println!("\n\nVector: ");
-
-    for arg in vector.unwrap().data{
+    println!("\n\nVector1: ");
+    for arg in vector1.sizes[..].iter(){
         print!("{}, ", arg);
     }
     println!("");
+    for arg in vector1.data[..].iter(){
+        print!("{}, ", arg);
+    }
+    println!("");
+    println!("\n\nVector2: ");
+    for arg in vector2.sizes[..].iter(){
+        print!("{}, ", arg);
+    }
+    println!("");
+    for arg in vector2.data[..].iter(){
+        print!("{}, ", arg);
+    }
+    println!("");
+
+    let dot: f32 = vector1.dot_product(&vector2).unwrap();
+
+    println!("Dot: {}", dot);
+
+    
 }
