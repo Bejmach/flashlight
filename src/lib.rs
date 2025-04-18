@@ -1,43 +1,44 @@
 pub mod math;
 
-use math::matrix::*;
 use math::derivatives::*;
 use math::sigmoid::*;
 
 use rand::prelude::*;
 
+use flashlight_tensor::prelude::*;
+
 use std::fmt;
 
 pub struct NeuralNetwork{
-    pub layers: Vec<usize>,
-    pub weights: Vec<Matrix>,
-    pub biases: Vec<Matrix>,
+    pub layers: Vec<u32>,
+    pub weights: Vec<Tensor<f32>>,
+    pub biases: Vec<Tensor<f32>>,
 }
 
 impl NeuralNetwork{
-    pub fn new(_layers: Vec<usize>, bias_range: f32, weight_range: f32) -> Self{
+    pub fn new(_layers: Vec<u32>, bias_range: f32, weight_range: f32) -> Self{
 
         let mut rng = rand::rng();
 
-        let mut _weights: Vec<Matrix> = Vec::with_capacity(_layers.len()-1);
-        let mut _biases: Vec<Matrix> = Vec::with_capacity(_layers.len()-1);
+        let mut _weights: Vec<Tensor<f32>> = Vec::with_capacity(_layers.len()-1);
+        let mut _biases: Vec<Tensor<f32>> = Vec::with_capacity(_layers.len()-1);
 
         for i in 1.._layers.len(){
-            let mut weights_matrix: Matrix = Matrix::new(_layers[i], _layers[i-1]);
-            let mut biases_matrix: Matrix = Matrix::new(_layers[i], 1);
+            let mut weights_tensor: Tensor<f32> = Tensor::new(&[_layers[i-1], _layers[i]]);
+            let mut biases_tensor: Tensor<f32> = Tensor::new(&[_layers[i], 1]);
 
             if i != _layers.len()-1{
                 for row in 0.._layers[i]{
-                    biases_matrix.set(row, 0, rng.random_range(-bias_range..bias_range))
+                    biases_tensor.set(rng.random_range(-bias_range..bias_range), &[row, 0])
                 }
             }
-            for collumn in 0.._layers[i-1]{
-                for row in 0.._layers[i]{
-                    weights_matrix.set(row, collumn, rng.random_range(-weight_range..weight_range));
+            for row in 0.._layers[i-1]{
+                for collumn in 0.._layers[i]{
+                    weights_tensor.set(rng.random_range(-weight_range..weight_range), &[row, collumn]);
                 }
             }
-            _weights.push(weights_matrix);
-            _biases.push(biases_matrix);
+            _weights.push(weights_tensor);
+            _biases.push(biases_tensor);
         }
 
         Self{
@@ -46,25 +47,40 @@ impl NeuralNetwork{
             weights: _weights,
         }
     }
-    pub fn forward_propagation(&self, input_data: Vec<f32>) -> Option<Vec<f32>>{
-        if input_data.len() != self.layers[0]{
+    pub fn forward_propagation(&self, input_data: &[f32]) -> Option<Tensor<f32>>{
+        if input_data.len() != self.layers[0] as usize{
             return None;
         }
 
-        let mut output_matrix: Matrix = Matrix::from_vec(vec![input_data.clone()]).transpose();
+        let mut output_tensor: Tensor<f32> = Tensor::from_data(input_data, &[input_data.len() as u32, 1]).unwrap(); 
         
         for i in 1..self.layers.len(){
             
-            println!("{}\n*\n{}\n+\n{}", self.weights[i-1].clone(), output_matrix, self.biases[i-1].clone());
 
-            output_matrix = matrix_add(matrix_mult(self.weights[i-1].clone(), output_matrix).unwrap(), self.biases[i-1].clone()).unwrap().to_sigmoid();
+            let transposed_weights = self.weights[i-1].matrix_transpose().unwrap();
+            let biases = &self.biases[i-1];
+            
+            println!("{}\n*\n{}\n+\n{}", transposed_weights.matrix_to_string().unwrap(), output_tensor.matrix_to_string().unwrap(), biases.matrix_to_string().unwrap());
 
-            println!("=\n{}", output_matrix);
+            let multiplied_tensor = transposed_weights.matrix_mult(&output_tensor).unwrap();
+    
+            output_tensor = multiplied_tensor.iter_add(&self.biases[i-1]).unwrap();
+            
+            println!("=\n{}", output_tensor.matrix_to_string().unwrap());
+
+            for row in 0..output_tensor.get_sizes()[0]{
+                for collumn in 0..output_tensor.get_sizes()[1]{
+                    output_tensor.set(sigmoid(output_tensor.value(&[row, collumn]).unwrap().clone()), &[row, collumn]);
+                }
+            }
+
+            println!("sigmoid\n{}", output_tensor.matrix_to_string().unwrap());
 
             println!("_______________________________________");
+
         }
         println!("Propagation finished");
-        Some(output_matrix.col(0).unwrap())
+        Some(output_tensor)
     }
 
 }
@@ -72,7 +88,7 @@ impl NeuralNetwork{
 impl fmt::Display for NeuralNetwork{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         
-        let mut longest_layer: usize = 0;
+        let mut longest_layer: u32 = 0;
 
         for var in self.layers.iter(){
             if var>&longest_layer{
@@ -96,7 +112,7 @@ impl fmt::Display for NeuralNetwork{
 
         for i in 0..self.biases.len(){    
             let layer_difference = longest_layer - self.layers[i+1];
-            let bias_col: Vec<f32> = self.biases[i].col(0).unwrap();
+            let bias_col: Vec<f32> = self.biases[i].matrix_col(0).unwrap().get_data().to_vec();
             
             for _j in 0..layer_difference{
                 return_string.push_str("   ");
