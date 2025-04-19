@@ -16,7 +16,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "flashlight"
-version = "0.1.0"
+version = "0.1.5"
 dependencies = [
  "flashlight_tensor",
  "rand",
@@ -25,7 +25,7 @@ dependencies = [
 [[package]]
 name = "flashlight_tensor"
 version = "0.4.4"
-source = "git+https://github.com/Bejmach/flashlight_tensor?branch=main#8c95ec0612a2b12b674ca2cf81edcd3ea6666d4f"
+source = "git+https://github.com/Bejmach/flashlight_tensor?branch=main#9cec4a40c5ad3c151e20469c0dfa4ead87f4dd68"
 
 [[package]]
 name = "getrandom"
