@@ -1,4 +1,4 @@
-use flashlight::NeuralNetwork;
+use flashlight::prelude::*;
 #[allow(unused)]
 use flashlight_tensor::prelude::*;
 
@@ -16,7 +16,7 @@ fn default_propagation(){
 
     let input_params: Vec<f32> = vec!(1.3, 3.1, 6.5);
 
-    println!("{}", nnetwork);
+    println!("{}", nnetwork.to_string());
 
     let propagation_output: Vec<f32> = nnetwork.forward_propagation(&input_params).unwrap().get_data().to_vec();
 

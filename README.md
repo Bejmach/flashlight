@@ -1,6 +1,6 @@
 # Flashlight
 
-> Package currently in development, so if you can use something else
+> Package currently in development, so if you can, use something else
 
 ## Already done
 - Neural network structure
@@ -9,3 +9,4 @@
 
 ## To do
 - backpropagation
+- saving and loading of the neural network
