@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 pub mod math;
 
 use math::derivatives::*;
@@ -64,7 +66,7 @@ impl NeuralNetwork{
 
             let multiplied_tensor = transposed_weights.matrix_mult(&output_tensor).unwrap();
     
-            output_tensor = multiplied_tensor.iter_tens_add(&self.biases[i-1]).unwrap();
+            output_tensor = multiplied_tensor.tens_add(&self.biases[i-1]).unwrap();
             
             println!("=\n{}", output_tensor.matrix_to_string().unwrap());
 
@@ -93,13 +95,13 @@ pub fn cost(y_hat: Tensor<f32>, y: Tensor<f32>) -> Option<f32>{
     let tensor_ones: Tensor<f32> = Tensor::fill(1.0, y_hat.get_sizes());
     
     //(y * log(y_hat))
-    let y_log_y_hat: Tensor<f32> = y.iter_tens_mult(&y_hat.iter_log()).unwrap();
+    let y_log_y_hat: Tensor<f32> = y.tens_mult(&y_hat.log()).unwrap();
     //(1 - y)
-    let negative_y: Tensor<f32> = tensor_ones.iter_tens_sub(&y).unwrap();
+    let negative_y: Tensor<f32> = tensor_ones.tens_sub(&y).unwrap();
     //(1 - y_hat)
-    let log_negative_y_hat: Tensor<f32> = tensor_ones.iter_tens_sub(&y_hat).unwrap().iter_log();
+    let log_negative_y_hat: Tensor<f32> = tensor_ones.tens_sub(&y_hat).unwrap().log();
 
-    let losses: Tensor<f32> = y_log_y_hat.iter_tens_add( &negative_y.iter_tens_mult(&log_negative_y_hat).unwrap() ).unwrap();
+    let losses: Tensor<f32> = y_log_y_hat.tens_add( &negative_y.tens_mult(&log_negative_y_hat).unwrap() ).unwrap();
 
     let m: usize = y_hat.count_data();
 

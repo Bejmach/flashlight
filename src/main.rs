@@ -1,4 +1,5 @@
 use flashlight::NeuralNetwork;
+#[allow(unused)]
 use flashlight_tensor::prelude::*;
 
 
