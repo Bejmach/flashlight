@@ -64,7 +64,7 @@ impl NeuralNetwork{
 
             let multiplied_tensor = transposed_weights.matrix_mult(&output_tensor).unwrap();
     
-            output_tensor = multiplied_tensor.iter_add(&self.biases[i-1]).unwrap();
+            output_tensor = multiplied_tensor.iter_tens_add(&self.biases[i-1]).unwrap();
             
             println!("=\n{}", output_tensor.matrix_to_string().unwrap());
 
@@ -82,7 +82,36 @@ impl NeuralNetwork{
         println!("Propagation finished");
         Some(output_tensor)
     }
+}
 
+///cost(y_hat(predicted answer), y(real_answer))
+pub fn cost(y_hat: Tensor<f32>, y: Tensor<f32>) -> Option<f32>{
+    if y_hat.get_sizes() != y.get_sizes(){
+        return None;
+    }
+
+    let tensor_ones: Tensor<f32> = Tensor::fill(1.0, y_hat.get_sizes());
+    
+    //(y * log(y_hat))
+    let y_log_y_hat: Tensor<f32> = y.iter_tens_mult(&y_hat.iter_log()).unwrap();
+    //(1 - y)
+    let negative_y: Tensor<f32> = tensor_ones.iter_tens_sub(&y).unwrap();
+    //(1 - y_hat)
+    let log_negative_y_hat: Tensor<f32> = tensor_ones.iter_tens_sub(&y_hat).unwrap().iter_log();
+
+    let losses: Tensor<f32> = y_log_y_hat.iter_tens_add( &negative_y.iter_tens_mult(&log_negative_y_hat).unwrap() ).unwrap();
+
+    let m: usize = y_hat.count_data();
+
+    let const_multiplier = 1.0/m as f32;
+
+    let mut summed_losses: f32 = 0.0;
+
+    for i in 0..losses.get_sizes()[0]{
+        summed_losses += const_multiplier * losses.matrix_row(i).unwrap().sum();
+    }
+
+    Some(-summed_losses)
 }
 
 impl fmt::Display for NeuralNetwork{

@@ -24,8 +24,8 @@ dependencies = [
 
 [[package]]
 name = "flashlight_tensor"
-version = "0.4.2"
-source = "git+https://github.com/Bejmach/flashlight_tensor?branch=main#aca76dc6bb6ec9f6ba2d863aa892c0539cf87a57"
+version = "0.4.4"
+source = "git+https://github.com/Bejmach/flashlight_tensor?branch=main#8c95ec0612a2b12b674ca2cf81edcd3ea6666d4f"
 
 [[package]]
 name = "getrandom"
