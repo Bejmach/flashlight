@@ -65,12 +65,14 @@ impl NeuralNetwork{
     ///
     /// let nnetwork: NeuralNetwork = NeuralNetwork::new(vec!{2, 3, 3, 1}, 1.0, 1.0);
     ///
-    /// nnetwork.forward_propagation(&[50.0, 150.0]);
+    /// let input_data: Tensor<f32> = Tensor::from_data(&[50.0, 150.0, 100.0, 220.0], &[2,
+    /// 2]).unwrap();
+    /// nnetwork.full_forward_propagation(&input_data);
     ///
     /// //this is not a test. It is impossible to predict the output of naural network with random
     /// //weights
     /// ```
-    pub fn full_forward_propagation(&self, input_data: Tensor<f32>) -> Option<Vec<Tensor<f32>>>{
+    pub fn full_forward_propagation(&self, input_data: &Tensor<f32>) -> Option<Vec<Tensor<f32>>>{
         if input_data.get_sizes().len() != 2{
             return None;
         }
@@ -78,7 +80,7 @@ impl NeuralNetwork{
             return None;
         }
 
-        let mut output_tensor: Tensor<f32> = input_data;
+        let mut output_tensor: Tensor<f32> = input_data.clone();
         
         let mut all_outputs: Vec<Tensor<f32>> = Vec::with_capacity(self.layers.len()-1);
 
@@ -88,11 +90,14 @@ impl NeuralNetwork{
             let transposed_weights = self.weights[i-1].matrix_transpose().unwrap();
             let biases = &self.biases[i-1];
             
-            println!("{}\n*\n{}\n+\n{}", transposed_weights.matrix_to_string().unwrap(), output_tensor.matrix_to_string().unwrap(), biases.matrix_to_string().unwrap());
+            println!("{}\n*\n{}\n=", output_tensor.matrix_to_string().unwrap(), transposed_weights.matrix_to_string().unwrap());
 
             let multiplied_tensor = transposed_weights.matrix_mult(&output_tensor).unwrap();
     
-            output_tensor = multiplied_tensor.tens_add(&self.biases[i-1]).unwrap();
+            println!("{}\n_________", multiplied_tensor.matrix_to_string().unwrap());
+            println!("{}\n+\n{}", multiplied_tensor.matrix_to_string().unwrap(), biases.matrix_to_string().unwrap());
+
+            output_tensor = multiplied_tensor.tens_broadcast_add(&biases).unwrap();
             
             println!("=\n{}", output_tensor.matrix_to_string().unwrap());
 
@@ -161,8 +166,20 @@ pub fn cost(y_hat: Tensor<f32>, y: Tensor<f32>) -> Option<f32>{
     Some(-summed_losses)
 }
 
-/// get value of backpropagation on last layer of neural network using input data and y(real answers)
-pub fn backprop_value(network: &NeuralNetwork, input: Tensor<f32>, y: Tensor<f32>) -> Option<(Tensor<f32>, Tensor<f32>)>{
+/// get value of backpropagation on each layer of neural network using input data and y(real answers)
+/// 
+/// # Example
+/// ```
+/// use flashlight::prelude::*;
+///
+/// let nnetwork: NeuralNetwork = NeuralNetwork::new(vec!{2, 3, 3, 1}, 1.0, 1.0);
+///
+/// let input_data: Tensor<f32> = Tensor::from_data(&[1.0, 2.0, 3.0, 4.0, 5.0, 6.0], &[3, 2]).unwrap().matrix_transpose().unwrap();
+/// let predicted_data: Tensor<f32> = Tensor::from_data(&[3.0, 7.0, 11.0], &[3, 1]).unwrap();
+///
+/// let backpropagation_values = backprop_value(&nnetwork, &input_data, &predicted_data);
+/// ```
+pub fn backprop_value(network: &NeuralNetwork, input: &Tensor<f32>, y: &Tensor<f32>) -> Option<(Vec<Tensor<f32>>, Vec<Tensor<f32>>)>{
     if input.get_sizes().len() != 2{
         return None;
     }
@@ -182,24 +199,44 @@ pub fn backprop_value(network: &NeuralNetwork, input: Tensor<f32>, y: Tensor<f32
     //weights
     let part_1 = (all_predictions[all_predictions.len()-1].tens_sub(&y)).unwrap();
     let part_2 = all_predictions[all_predictions.len()-2].matrix_transpose().unwrap();
+
+    println!("{}\n\n{}", part_1.matrix_to_string().unwrap(), part_2.matrix_to_string().unwrap());
     let weight_last = part_1.matrix_mult(&part_2).unwrap().mult(const_multiplier);
 
     //biases
     let mut bias_last: Tensor<f32> = Tensor::fill(0.0, all_predictions[all_predictions.len()-1].get_sizes());
 
     for i in 0..all_predictions[all_predictions.len()-1].get_sizes()[0]{
-        let prediction_sample = all_predictions[all_predictions.len()-1].matrix_row(i).unwrap()
+        let prediction_batch = all_predictions[all_predictions.len()-1].matrix_row(i).unwrap()
             .tens_sub(&y.matrix_row(i).unwrap()).unwrap();
-        bias_last = bias_last.tens_add(&prediction_sample).unwrap();
+        bias_last = bias_last.tens_add(&prediction_batch).unwrap();
     }
 
     bias_last = bias_last.mult(const_multiplier);
 
     //propagator
     let weitht_transpose = network.weights[network.weights.len()-1].matrix_transpose().unwrap();
-    let delta = all_predictions[all_predictions.len()-1].tens_sub(&y).unwrap().mult(const_multiplier);
+    let mut delta = all_predictions[all_predictions.len()-1].tens_sub(&y).unwrap().mult(const_multiplier);
 
-    let propagator = weitht_transpose.matrix_mult(&delta).unwrap();
+    let mut full_weights: Vec<Tensor<f32>> = Vec::with_capacity(network.layers.len()-1);
+    let mut full_biases: Vec<Tensor<f32>> = Vec::with_capacity(network.layers.len()-1);
 
-    Some((weight_last, bias_last))
+    full_weights.push(weight_last.clone());
+    full_biases.push(bias_last.clone());
+
+    for i in (1..network.layers.len()-1).rev(){
+        let delta_part_1 = network.weights[i+1].matrix_transpose().unwrap().matrix_mult(&delta).unwrap();
+        let delta_part_2 = all_predictions[i].tens_mult(&tensor_ones.tens_sub(&all_predictions[i]).unwrap()).unwrap();
+        delta = delta_part_1.tens_mult(&delta_part_2).unwrap();
+
+        let weights = delta.matrix_mult(&all_predictions[i-1].matrix_transpose().unwrap()).unwrap().mult(const_multiplier);
+        let bias = delta.mult(const_multiplier);
+
+        full_weights.push(weights);
+        full_biases.push(bias);
+    }
+    full_weights.reverse();
+    full_biases.reverse();
+
+    Some((full_weights, full_biases))
 }
