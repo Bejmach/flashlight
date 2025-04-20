@@ -16,8 +16,8 @@
 - saving and loading the model
 
 ## Dependencies
-[flashlight_tensor](https://crates.io/crates/flashlight_tensor)
-[Rand](https://crates.io/crates/rand)
+- [flashlight_tensor](https://crates.io/crates/flashlight_tensor)
+- [Rand](https://crates.io/crates/rand)
 
 
 ## Why the name "Flashlight"
