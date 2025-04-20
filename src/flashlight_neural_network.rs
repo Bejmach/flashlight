@@ -36,7 +36,7 @@ impl NeuralNetwork{
             let mut weights_tensor: Tensor<f32> = Tensor::new(&[_layers[i-1], _layers[i]]);
             let mut biases_tensor: Tensor<f32> = Tensor::new(&[_layers[i], 1]);
 
-            if i != _layers.len()-1{
+            if i != _layers.len(){
                 for row in 0.._layers[i]{
                     biases_tensor.set(rng.random_range(-bias_range..bias_range), &[row, 0])
                 }
@@ -162,7 +162,7 @@ pub fn cost(y_hat: Tensor<f32>, y: Tensor<f32>) -> Option<f32>{
 }
 
 /// get value of backpropagation on last layer of neural network using input data and y(real answers)
-pub fn backprop_value(network: NeuralNetwork, input: Tensor<f32>, y: Tensor<f32>) -> Option<Tensor<f32>>{
+pub fn backprop_value(network: &NeuralNetwork, input: Tensor<f32>, y: Tensor<f32>) -> Option<(Tensor<f32>, Tensor<f32>)>{
     if input.get_sizes().len() != 2{
         return None;
     }
@@ -179,11 +179,27 @@ pub fn backprop_value(network: NeuralNetwork, input: Tensor<f32>, y: Tensor<f32>
     
     let const_multiplier = 1.0 / m as f32;
 
+    //weights
     let part_1 = (all_predictions[all_predictions.len()-1].tens_sub(&y)).unwrap();
-
     let part_2 = all_predictions[all_predictions.len()-2].matrix_transpose().unwrap();
+    let weight_last = part_1.matrix_mult(&part_2).unwrap().mult(const_multiplier);
 
-    let final_prod = part_1.matrix_mult(&part_2).unwrap().mult(const_multiplier);
+    //biases
+    let mut bias_last: Tensor<f32> = Tensor::fill(0.0, all_predictions[all_predictions.len()-1].get_sizes());
 
-    Some(final_prod)
+    for i in 0..all_predictions[all_predictions.len()-1].get_sizes()[0]{
+        let prediction_sample = all_predictions[all_predictions.len()-1].matrix_row(i).unwrap()
+            .tens_sub(&y.matrix_row(i).unwrap()).unwrap();
+        bias_last = bias_last.tens_add(&prediction_sample).unwrap();
+    }
+
+    bias_last = bias_last.mult(const_multiplier);
+
+    //propagator
+    let weitht_transpose = network.weights[network.weights.len()-1].matrix_transpose().unwrap();
+    let delta = all_predictions[all_predictions.len()-1].tens_sub(&y).unwrap().mult(const_multiplier);
+
+    let propagator = weitht_transpose.matrix_mult(&delta).unwrap();
+
+    Some((weight_last, bias_last))
 }
