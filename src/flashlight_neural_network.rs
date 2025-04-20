@@ -56,7 +56,7 @@ impl NeuralNetwork{
             weights: _weights,
         }
     }
-    /// Get prediction of neural network based on &[f32] input data
+    /// Get prediction of each layer in neural network based on &[f32] input data
     /// where data need to be of length of the input layer
     ///
     /// # Example
@@ -70,13 +70,18 @@ impl NeuralNetwork{
     /// //this is not a test. It is impossible to predict the output of naural network with random
     /// //weights
     /// ```
-    pub fn forward_propagation(&self, input_data: &[f32]) -> Option<Tensor<f32>>{
-        if input_data.len() != self.layers[0] as usize{
+    pub fn full_forward_propagation(&self, input_data: Tensor<f32>) -> Option<Vec<Tensor<f32>>>{
+        if input_data.get_sizes().len() != 2{
+            return None;
+        }
+        if input_data.get_sizes()[1] != self.layers[0]{
             return None;
         }
 
-        let mut output_tensor: Tensor<f32> = Tensor::from_data(input_data, &[input_data.len() as u32, 1]).unwrap(); 
+        let mut output_tensor: Tensor<f32> = input_data;
         
+        let mut all_outputs: Vec<Tensor<f32>> = Vec::with_capacity(self.layers.len()-1);
+
         for i in 1..self.layers.len(){
             
 
@@ -101,9 +106,11 @@ impl NeuralNetwork{
 
             println!("_______________________________________");
 
+            all_outputs.push(output_tensor.clone());
+
         }
         println!("Propagation finished");
-        Some(output_tensor)
+        Some(all_outputs)
     }
 }
 
@@ -152,4 +159,31 @@ pub fn cost(y_hat: Tensor<f32>, y: Tensor<f32>) -> Option<f32>{
     }
 
     Some(-summed_losses)
+}
+
+/// get value of backpropagation on last layer of neural network using input data and y(real answers)
+pub fn backprop_value(network: NeuralNetwork, input: Tensor<f32>, y: Tensor<f32>) -> Option<Tensor<f32>>{
+    if input.get_sizes().len() != 2{
+        return None;
+    }
+    if input.get_sizes()[1] != network.layers[0]{
+        return None;
+    }
+    
+    //A[0-L]
+    let all_predictions = network.full_forward_propagation(input).unwrap();
+
+    let tensor_ones: Tensor<f32> = Tensor::fill(1.0, all_predictions[all_predictions.len()-1].get_sizes());
+
+    let m: usize = all_predictions[all_predictions.len()-1].count_data();
+    
+    let const_multiplier = 1.0 / m as f32;
+
+    let part_1 = (all_predictions[all_predictions.len()-1].tens_sub(&y)).unwrap();
+
+    let part_2 = all_predictions[all_predictions.len()-2].matrix_transpose().unwrap();
+
+    let final_prod = part_1.matrix_mult(&part_2).unwrap().mult(const_multiplier);
+
+    Some(final_prod)
 }
