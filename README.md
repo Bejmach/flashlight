@@ -1,5 +1,8 @@
 # Flashlight
 
+[![Rust](https://github.com/Bejmach/flashlight/actions/workflows/rust.yml/badge.svg?event=push)](https://github.com/Bejmach/flashlight/actions/workflows/rust.yml)
+[![Crates.io](https://img.shields.io/crates/v/flashlight.svg)](https://crates.io/crates/flashlight)
+
 > Package currently in development, so if you can, use something else
 
 ## Already done
@@ -11,6 +14,10 @@
 ## To do
 - use backpropagation values to train model
 - saving and loading the model
+
+## Dependencies
+[flashlight_tensor](https://crates.io/crates/flashlight_tensor)
+[Rand](https://crates.io/crates/rand)
 
 
 ## Why the name "Flashlight"
