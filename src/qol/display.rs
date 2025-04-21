@@ -1,7 +1,8 @@
 use crate::flashlight_model::*;
+use flashlight_tensor::prelude::*;
 
 impl Model{
-    pub fn to_string(&self) -> String{
+    pub fn aesthetic_to_string(&self) -> String{
         
         let mut longest_layer: u32 = 0;
 
@@ -38,6 +39,28 @@ impl Model{
                 if j == bias_col.len()-1 && i != self.biases.len()-1{
                    return_string.push_str("\n\n"); 
                 }
+            }
+        }
+
+        return_string
+    }
+    
+    pub fn full_to_string(&self) -> String{
+        let mut return_string: String = String::new();
+
+        return_string.push_str(&Tensor::fill(0.0, &[self.layers[0], 1]).matrix_to_string().unwrap());
+
+        return_string.push_str("\n\n");
+
+        for i in 0..self.layers.len()-1{
+            return_string.push_str(&format!("weights {}\n", i));
+            return_string.push_str(&self.weights[i].matrix_to_string().unwrap());
+            return_string.push_str("\n\n");
+            return_string.push_str(&format!("biases {}\n", i));
+            return_string.push_str(&self.biases[i].matrix_to_string().unwrap());
+
+            if(i<self.layers.len()-2){
+                return_string.push_str("\n\n");
             }
         }
 

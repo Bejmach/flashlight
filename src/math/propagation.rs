@@ -11,6 +11,8 @@ pub struct BackpropagationValue{
 impl Model{
     /// Get prediction of each layer in neural network based on &[f32] input data
     /// where data need to be of length of the input layer
+    /// data returned, collumn per sample, row per neuron on layer
+    /// neuron x samples
     ///
     /// Input data formated where each tensor row is one input sample.
     ///
@@ -23,9 +25,6 @@ impl Model{
     /// let input_data: Tensor<f32> = Tensor::from_data(&[50.0, 150.0, 100.0, 220.0, 75.0, 190.0], &[3,
     /// 2]).unwrap();
     /// model.full_forward_propagation(&input_data).unwrap();
-    ///
-    /// //this is not a test. It is impossible to predict the output of naural network with random
-    /// //weights
     /// ```
     pub fn full_forward_propagation(&self, input_data: &Tensor<f32>) -> Option<Vec<Tensor<f32>>>{
         if input_data.get_sizes().len() != 2{
@@ -72,6 +71,42 @@ impl Model{
         println!("Propagation finished");
         Some(all_outputs)
     }
+
+    /// return backpropagation values for last layer where, predictions and answers samples are
+    /// stored one per row(transposed at last to be one on collumn)
+    pub fn last_layer_backprop(&self, all_predictions: &Vec<Tensor<f32>>, real_answers: &Tensor<f32>) -> Option<BackpropagationValue>{
+    if all_predictions.len() < 2{
+        println!("To small number of layers to form backpropagation");
+        return None;
+    }
+    //check if rows are equal
+    if real_answers.get_sizes()[0] != all_predictions[all_predictions.len()-1].get_sizes()[0]{
+        println!("Number of samples not equal number of real outputs");
+        return None;
+    }
+
+    let const_multiplier: f32 = 1.0 / real_answers.count_data() as f32;
+
+    let last_minus_real: Tensor<f32> = all_predictions[all_predictions.len()-1].tens_sub(real_answers).unwrap();
+    let transposed_not_last: Tensor<f32> = all_predictions[all_predictions.len() - 2].matrix_transpose().unwrap();
+
+    let backprop_weights: Tensor<f32> = last_minus_real.matrix_mult(&transposed_not_last).unwrap().mult(const_multiplier);
+
+    let mut bias_sum: Tensor<f32> = Tensor::new(&[1, real_answers.get_sizes()[1]]);
+    for i in 0..real_answers.get_sizes()[1]{
+        let predicted_row = all_predictions[all_predictions.len()-1].matrix_row(i).unwrap();
+        let real_row = real_answers.matrix_row(i).unwrap();
+        bias_sum = bias_sum.tens_add(&predicted_row.tens_sub(&real_row).unwrap()).unwrap();
+    }
+
+    let backprop_biases = bias_sum.mult(const_multiplier).matrix_transpose().unwrap();
+
+    Some(BackpropagationValue{
+        weights: backprop_weights,
+        biases: backprop_biases,
+    })
+
+}
 
 }
 
@@ -143,6 +178,5 @@ pub fn tensor_to_sigmoid(tensor: &Tensor<f32>) -> Tensor<f32>{
 
     sigmoid_input
 }
-
 
 
