@@ -66,8 +66,8 @@ impl NeuralNetwork{
     /// let nnetwork: NeuralNetwork = NeuralNetwork::new(vec!{2, 3, 3, 1}, 1.0, 1.0);
     ///
     /// let input_data: Tensor<f32> = Tensor::from_data(&[50.0, 150.0, 100.0, 220.0], &[2,
-    /// 2]).unwrap();
-    /// nnetwork.full_forward_propagation(&input_data);
+    /// 2]).unwrap().matrix_transpose().unwrap();
+    /// nnetwork.full_forward_propagation(&input_data).unwrap();
     ///
     /// //this is not a test. It is impossible to predict the output of naural network with random
     /// //weights
@@ -76,7 +76,7 @@ impl NeuralNetwork{
         if input_data.get_sizes().len() != 2{
             return None;
         }
-        if input_data.get_sizes()[1] != self.layers[0]{
+        if input_data.get_sizes()[0] != self.layers[0]{
             return None;
         }
 
@@ -90,7 +90,7 @@ impl NeuralNetwork{
             let transposed_weights = self.weights[i-1].matrix_transpose().unwrap();
             let biases = &self.biases[i-1];
             
-            println!("{}\n*\n{}\n=", output_tensor.matrix_to_string().unwrap(), transposed_weights.matrix_to_string().unwrap());
+            println!("{}\n*\n{}\n=", transposed_weights.matrix_to_string().unwrap(), output_tensor.matrix_to_string().unwrap());
 
             let multiplied_tensor = transposed_weights.matrix_mult(&output_tensor).unwrap();
     
@@ -166,6 +166,33 @@ pub fn cost(y_hat: Tensor<f32>, y: Tensor<f32>) -> Option<f32>{
     Some(-summed_losses)
 }
 
+/// get tensor filled with data from input tensor transposed by sigmoid function
+///
+/// # Example
+/// ```
+/// use flashlight::prelude::*;
+///
+/// let tensor = Tensor::fill(100.0, &[10,1]);
+///
+/// let sigmoid_tens = tensor_to_sigmoid(&tensor);
+///
+/// assert_eq!(sigmoid_tens.get_data(), &vec!{1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0});
+/// ```
+pub fn tensor_to_sigmoid(tensor: &Tensor<f32>) -> Tensor<f32>{
+    let mut data_vector: Vec<f32> = Vec::with_capacity(tensor.get_data().len());
+    for i in 0..tensor.get_data().len(){
+        data_vector.push(sigmoid(tensor.get_data()[i]));
+    }
+    let sigmoid_input: Tensor<f32> = Tensor::from_data(&data_vector, tensor.get_sizes()).unwrap();
+
+    sigmoid_input
+}
+
+pub struct BackpropagationValues{
+    pub weights: Vec<Tensor<f32>>,
+    pub biases: Vec<Tensor<f32>>,
+}
+
 /// get value of backpropagation on each layer of neural network using input data and y(real answers)
 /// 
 /// # Example
@@ -175,17 +202,21 @@ pub fn cost(y_hat: Tensor<f32>, y: Tensor<f32>) -> Option<f32>{
 /// let nnetwork: NeuralNetwork = NeuralNetwork::new(vec!{2, 3, 3, 1}, 1.0, 1.0);
 ///
 /// let input_data: Tensor<f32> = Tensor::from_data(&[1.0, 2.0, 3.0, 4.0, 5.0, 6.0], &[3, 2]).unwrap().matrix_transpose().unwrap();
-/// let predicted_data: Tensor<f32> = Tensor::from_data(&[3.0, 7.0, 11.0], &[3, 1]).unwrap();
+/// let predicted_data: Tensor<f32> = Tensor::from_data(&[3.0, 7.0, 11.0], &[1, 3]).unwrap();
 ///
-/// let backpropagation_values = backprop_value(&nnetwork, &input_data, &predicted_data);
+/// let backpropagation_values = backprop_values(&nnetwork, &input_data, &predicted_data).unwrap();
 /// ```
-pub fn backprop_value(network: &NeuralNetwork, input: &Tensor<f32>, y: &Tensor<f32>) -> Option<(Vec<Tensor<f32>>, Vec<Tensor<f32>>)>{
+pub fn backprop_values(network: &NeuralNetwork, input: &Tensor<f32>, y: &Tensor<f32>) -> Option<BackpropagationValues>{
     if input.get_sizes().len() != 2{
+        println!("input not in matrix");
         return None;
     }
-    if input.get_sizes()[1] != network.layers[0]{
+    if input.get_sizes()[0] != network.layers[0]{
+        println!("input does not match network input: {}, {}", input.get_sizes()[0], network.layers[0]);
         return None;
     }
+
+    let real_y = tensor_to_sigmoid(&y);
     
     //A[0-L]
     let all_predictions = network.full_forward_propagation(input).unwrap();
@@ -197,7 +228,8 @@ pub fn backprop_value(network: &NeuralNetwork, input: &Tensor<f32>, y: &Tensor<f
     let const_multiplier = 1.0 / m as f32;
 
     //weights
-    let part_1 = (all_predictions[all_predictions.len()-1].tens_sub(&y)).unwrap();
+    println!("{}\n-\n{}", all_predictions[all_predictions.len()-1].matrix_to_string().unwrap(), real_y.matrix_to_string().unwrap());
+    let part_1 = (all_predictions[all_predictions.len()-1].tens_sub(&real_y)).unwrap();
     let part_2 = all_predictions[all_predictions.len()-2].matrix_transpose().unwrap();
 
     println!("{}\n\n{}", part_1.matrix_to_string().unwrap(), part_2.matrix_to_string().unwrap());
@@ -216,7 +248,7 @@ pub fn backprop_value(network: &NeuralNetwork, input: &Tensor<f32>, y: &Tensor<f
 
     //propagator
     let weitht_transpose = network.weights[network.weights.len()-1].matrix_transpose().unwrap();
-    let mut delta = all_predictions[all_predictions.len()-1].tens_sub(&y).unwrap().mult(const_multiplier);
+    let mut delta = all_predictions[all_predictions.len()-1].tens_sub(&real_y).unwrap().mult(const_multiplier);
 
     let mut full_weights: Vec<Tensor<f32>> = Vec::with_capacity(network.layers.len()-1);
     let mut full_biases: Vec<Tensor<f32>> = Vec::with_capacity(network.layers.len()-1);
@@ -238,5 +270,34 @@ pub fn backprop_value(network: &NeuralNetwork, input: &Tensor<f32>, y: &Tensor<f
     full_weights.reverse();
     full_biases.reverse();
 
-    Some((full_weights, full_biases))
+    Some(BackpropagationValues{
+        weights: full_weights,
+        biases: full_biases,
+    })
+}
+
+/// get value of backpropagation on each layer of neural network using input data and y(real answers)
+/// 
+/// # Example
+/// ```
+/// use flashlight::prelude::*;
+///
+/// let mut nnetwork: NeuralNetwork = NeuralNetwork::new(vec!{2, 3, 3, 1}, 1.0, 1.0);
+///
+/// let input_data: Tensor<f32> = Tensor::from_data(&[1.0, 2.0, 3.0, 4.0, 5.0, 6.0], &[3, 2]).unwrap().matrix_transpose().unwrap();
+/// let predicted_data: Tensor<f32> = Tensor::from_data(&[3.0, 7.0, 11.0], &[3, 1]).unwrap();
+///
+/// backpropagation(&mut nnetwork, &input_data, &predicted_data);
+/// ```
+pub fn backpropagation(network: &mut NeuralNetwork, input: &Tensor<f32>, y: &Tensor<f32>){
+    let backpropagation_values = backprop_values(network, input, y).unwrap();
+    
+    for i in 0..backpropagation_values.weights.len(){
+
+        println!("{}\n+\n{}\n----------------------\n{}\n+\n{}", network.weights[i].matrix_to_string().unwrap(), backpropagation_values.weights[i].matrix_to_string().unwrap(), 
+            network.biases[i].matrix_to_string().unwrap(), backpropagation_values.biases[i].matrix_to_string().unwrap());
+
+        network.weights[i] = network.weights[i].tens_add(&backpropagation_values.weights[i]).unwrap();
+        network.biases[i] = network.biases[i].tens_add(&backpropagation_values.biases[i]).unwrap();
+    }
 }
