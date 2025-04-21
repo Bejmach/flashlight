@@ -1,6 +1,6 @@
-use crate::flashlight_neural_network::*;
+use crate::flashlight_model::*;
 
-impl NeuralNetwork{
+impl Model{
     pub fn to_string(&self) -> String{
         
         let mut longest_layer: u32 = 0;

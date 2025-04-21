@@ -9,10 +9,9 @@
 - Neural network structure
 - forward propagation
 - cost
-- backpropagation values(not tested)
 
 ## To do
-- use backpropagation values to train model
+- backpropagation
 - saving and loading the model
 
 ## Dependencies

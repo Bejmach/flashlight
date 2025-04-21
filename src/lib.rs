@@ -3,7 +3,7 @@
 pub mod qol;
 pub mod math;
 pub mod prelude;
-pub mod flashlight_neural_network;
+pub mod flashlight_model;
 
 
 
