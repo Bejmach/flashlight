@@ -74,6 +74,8 @@ impl Model{
 
     /// return backpropagation values for last layer where, predictions and answers samples are
     /// stored one per row(transposed at last to be one on collumn)
+    /// data returned, collumn per sample, row per neuron on layer
+    /// neuron x samples
     pub fn last_layer_backprop(&self, all_predictions: &Vec<Tensor<f32>>, real_answers: &Tensor<f32>) -> Option<BackpropagationValue>{
     if all_predictions.len() < 2{
         println!("To small number of layers to form backpropagation");
