@@ -14,7 +14,7 @@ impl Model{
     /// data returned, collumn per sample, row per neuron on layer
     /// neuron x samples
     ///
-    /// Input data formated where each tensor row is one input sample.
+    /// Input data formated where each tensor collumn is one input sample.
     ///
     /// # Example
     /// ```
@@ -28,25 +28,27 @@ impl Model{
     /// ```
     pub fn full_forward_propagation(&self, input_data: &Tensor<f32>) -> Option<Vec<Tensor<f32>>>{
         if input_data.get_sizes().len() != 2{
+            println!("input not matrix");
             return None;
         }
-        if input_data.get_sizes()[1] != self.layers[0]{
+        if input_data.get_sizes()[0] != self.layers[0]{
+            println!("bach size and input layer differ, FFP");
             return None;
         }
 
-        let mut output_tensor: Tensor<f32> = input_data.clone().matrix_transpose().unwrap();
+        let mut output_tensor: Tensor<f32> = input_data.clone();
         
         let mut all_outputs: Vec<Tensor<f32>> = Vec::with_capacity(self.layers.len()-1);
 
         for i in 1..self.layers.len(){
             
 
-            let transposed_weights = self.weights[i-1].matrix_transpose().unwrap();
+            let weights = &self.weights[i-1];
             let biases = &self.biases[i-1];
             
-            println!("{}\n*\n{}\n=", transposed_weights.matrix_to_string().unwrap(), output_tensor.matrix_to_string().unwrap());
+            println!("{}\n*\n{}\n=", weights.matrix_to_string().unwrap(), output_tensor.matrix_to_string().unwrap());
 
-            let multiplied_tensor = transposed_weights.matrix_mult(&output_tensor).unwrap();
+            let multiplied_tensor = weights.matrix_transpose().unwrap().matrix_mult(&output_tensor).unwrap();
     
             println!("{}\n_________", multiplied_tensor.matrix_to_string().unwrap());
             println!("{}\n+\n{}", multiplied_tensor.matrix_to_string().unwrap(), biases.matrix_to_string().unwrap());
@@ -70,6 +72,38 @@ impl Model{
         }
         println!("Propagation finished");
         Some(all_outputs)
+    }
+
+    pub fn cross_entropy_backprop_loop(&self, input_data: &Tensor<f32>, real_answers: &Tensor<f32>) {
+
+        if input_data.get_sizes()[1] != real_answers.get_sizes()[1]{
+            println!("input and output bach count differ");
+            return;
+        }
+        if input_data.get_sizes()[0] != self.layers[0]{
+            println!("bach size and input layer size differ, CEBP");
+            return;
+        }
+        
+        let all_predictions = self.full_forward_propagation(input_data).unwrap();
+
+        let mut backprop_values: Vec<BackpropagationValue> = Vec::with_capacity(self.layers.len()-1);
+
+        //C/Z[L] 
+        let mut delta: Tensor<f32> = all_predictions[all_predictions.len()-1].tens_sub(real_answers).unwrap();
+        
+        let weight_backprop = all_predictions[all_predictions.len()-2].clone();
+        println!("{}, {}/ {}", delta.get_sizes()[0], delta.get_sizes()[1], delta.get_sizes().len());
+        let mut bias_backprop: Tensor<f32> =  Tensor::fill(0.0, &[delta.get_sizes()[0], 1]);
+        for i in 0..delta.get_sizes()[1]{
+            println!("{}\n\n{}", bias_backprop.matrix_to_string().unwrap(), &delta.matrix_to_string().unwrap());
+            println!("{}", &delta.matrix_col(i).unwrap().transform(&[delta.get_sizes()[0], 1]).unwrap().matrix_to_string().unwrap());
+            bias_backprop = bias_backprop.tens_add(&delta.matrix_col(i).unwrap().transform(&[delta.get_sizes()[0], 1]).unwrap()).unwrap();
+        }
+
+        println!("\nLast_layer_backprop:\n{}\n\n{}", weight_backprop.matrix_to_string().unwrap(), bias_backprop.matrix_to_string().unwrap());
+
+        
     }
 
     /// return backpropagation values for last layer where, predictions and answers samples are
@@ -122,9 +156,9 @@ impl Model{
 /// let y_hat: Tensor<f32> = Tensor::fill(0.9, &[10, 1]);
 /// let y: Tensor<f32> = Tensor::fill(0.1, &[10, 1]);
 ///
-/// let network_cost = cost(y_hat, y).unwrap();
+/// let network_cost = cross_entropy_cost(y_hat, y).unwrap();
 /// ```
-pub fn cost(y_hat: Tensor<f32>, y: Tensor<f32>) -> Option<f32>{
+pub fn cross_entropy_cost(y_hat: Tensor<f32>, y: Tensor<f32>) -> Option<f32>{
     if y_hat.get_sizes() != y.get_sizes(){
         return None;
     }

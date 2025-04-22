@@ -1,4 +1,5 @@
 the activation is taken from sigmoid function
+Cost is taken from cross entropy
 
 Chain
 			W[L]			W[L-1]
@@ -35,7 +36,7 @@ to get earlier layers we use the previously calculated derivative where
 
   &C		&C		&Z[L]    &A[L-1]
 ------- = ------ * ------- * -------
-&A[L-1]	  &Z[L]    &A[L-1]   &Z[L-1]
+&Z[L-1]	  &Z[L]    &A[L-1]   &Z[L-1]
 
 where 
   &C
@@ -81,6 +82,6 @@ so we end up with previously calculated derivative of Z * A[L-1](also remember t
 
 and with bias
 
-we end up with W[L] * A[L-1], which is the same for each neuron in bach we use, so we can just use a sum of error on each bach, and we end up with sum(C/Z[l] der) * 1/m(sum of bach, used to get average of baches). dont ask questions, its 2:30 right now, and I dont think.
+we end up with W[L] * A[L-1], which is the same for each neuron in bach we use, so we can just use a sum of error on each bach, and we end up with sum(C/Z[l] der) * 1/m(count of samples, used to get average of baches). dont ask questions, its 2:30 right now, and I dont think.
 
 I end with this, maybe someone will go throu that, I dont care. Maybe you will learn something, or you will have a reason to shit on me.

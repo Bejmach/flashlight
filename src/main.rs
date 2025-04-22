@@ -8,11 +8,9 @@ fn main() {
 
     println!("{}\n\n{}", model.aesthetic_to_string(), model.full_to_string());
 
-    let input_data: Tensor<f32> = Tensor::from_data(&[50.0, 150.0, 100.0, 220.0, 75.0, 190.0], &[3,2]).unwrap();
-    let prediction = model.full_forward_propagation(&input_data).unwrap();
+    let input_data: Tensor<f32> = Tensor::from_data(&[50.0, 150.0, 100.0, 220.0, 75.0, 190.0], &[3,2]).unwrap().matrix_transpose().unwrap();
+    let expected_output: Tensor<f32> = Tensor::from_data(&[0.0, 1.0, 0.0], &[3, 1]).unwrap().matrix_transpose().unwrap();
 
-    println!("\nPredictions: ");
-    for i in 0..prediction.len(){
-        println!("{}\n\n", prediction[i].matrix_to_string().unwrap());
-    }
+    model.cross_entropy_backprop_loop(&input_data, &expected_output);
+
 }

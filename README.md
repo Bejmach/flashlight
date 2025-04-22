@@ -3,7 +3,10 @@
 [![Rust](https://github.com/Bejmach/flashlight/actions/workflows/rust.yml/badge.svg?event=push)](https://github.com/Bejmach/flashlight/actions/workflows/rust.yml)
 [![Crates.io](https://img.shields.io/crates/v/flashlight.svg)](https://crates.io/crates/flashlight)
 
-> Package currently in development, so if you can, use something else
+> Package currently in development, so if you can, use something else  
+
+> project not related to similarly named [flashlight](https://github.com/flashlight/flashlight). The name was coincidental and chosen independently.
+
 
 ## Already done
 - Neural network structure
@@ -20,7 +23,6 @@
 
 
 ## Why the name "Flashlight"
-> Just for clarification, I didn't know that there was already other "flashlight" library for machine learning written in C++. I only searched the crates.io for packages with similar name
 
 Before I decided on the name, I wanted to use some  mythology reference, because I assumed that the "Torch" library based its name on Prometheus myth, but it didn't click.
 
