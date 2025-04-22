@@ -3,7 +3,7 @@
 [![Rust](https://github.com/Bejmach/flashlight/actions/workflows/rust.yml/badge.svg?event=push)](https://github.com/Bejmach/flashlight/actions/workflows/rust.yml)
 [![Crates.io](https://img.shields.io/crates/v/flashlight.svg)](https://crates.io/crates/flashlight)
 
-> Package currently in development, so if you can, use something else  
+> Package currently in development, you can use it, but it's hard for now
 
 > project not related to similarly named [flashlight](https://github.com/flashlight/flashlight). The name was coincidental and chosen independently.
 
@@ -12,10 +12,15 @@
 - Neural network structure
 - forward propagation
 - cost
+- BACKPROP IS WORKING!!! (dont ask for math. I kinda did something using the explanation written in txt file in repo. Its not entirely correct, but a concept is there)
 
 ## To do
-- backpropagation
+- easier usage
+- f64 and f128 support(if I will try to do a more acurate calculator)
 - saving and loading the model
+
+## Additional info
+- Don't use that for creating calculator. I tried, and you can see it in main.rs in repo, and a small difference in output genereta a big difference in real number, like expected = 0.7310586 = 100, output = 0.731054 = 43
 
 ## Dependencies
 - [flashlight_tensor](https://crates.io/crates/flashlight_tensor)
@@ -28,7 +33,7 @@ Before I decided on the name, I wanted to use some  mythology reference, because
 
 Some time after that, I thought to myself "Why base the name on some mythical meaning of stuff, when I can refer to them literally.", and that's when I came up with three name ideas for project: "**Lamp**", "**Bulb**" and "**Flashlight**", and well... I decided on "Flashlight" because It sounded the **goofiest** of them all.
 
-Sure, I could've tried to justify it with something like, "*Flashlight is written in Rust and Torch is written In C, so Flashlight is safer, like how flashlights are safer than torches...*" but I would be lying if I did. I decided on that name **because it was funny**, and I didn’t think it would actually fit the project — but here we are, and now it feels like the perfect name.
+Sure, I could've tried to justify it with something like, "*Flashlight is written in Rust and Torch is written In C, so Flashlight is safer, like how flashlights are safer than torches...*" but I would be lying if I did. I decided on that name **because it was funny**, and I didn’t think it would actually fit the project — but here we are.
 
 I hope you had a good time reading this short personal story. I just rly wanted to include that in the readme, so deal with it.
 

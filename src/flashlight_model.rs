@@ -33,7 +33,7 @@ impl Model{
         let mut _biases: Vec<Tensor<f32>> = Vec::with_capacity(_layers.len()-1);
 
         for i in 1.._layers.len(){
-            let mut weights_tensor: Tensor<f32> = Tensor::new(&[_layers[i-1], _layers[i]]);
+            let mut weights_tensor: Tensor<f32> = Tensor::new(&[_layers[i], _layers[i-1]]);
             let mut biases_tensor: Tensor<f32> = Tensor::new(&[_layers[i], 1]);
 
             if i != _layers.len(){
@@ -41,8 +41,8 @@ impl Model{
                     biases_tensor.set(rng.random_range(-bias_range..bias_range), &[row, 0])
                 }
             }
-            for row in 0.._layers[i-1]{
-                for collumn in 0.._layers[i]{
+            for row in 0.._layers[i]{
+                for collumn in 0.._layers[i-1]{
                     weights_tensor.set(rng.random_range(-weight_range..weight_range), &[row, collumn]);
                 }
             }

@@ -40,7 +40,7 @@ to get earlier layers we use the previously calculated derivative where
 
 where 
   &C
------ = calculated earlier
+----- = calculated earlier, will call it delta later
 &Z[L]
 
 Z[L] = W[L] * A[L-1] + b[L];
@@ -57,6 +57,13 @@ where did I saw that formula before?
 &A[L-1]
 ------- = sig`(Z[L-1]) = sig(Z[L-1]) * (1-sig(Z[L-1])) = A[L-1] * (1-A[L-1])
 &Z[L-1]
+
+so we end up with
+   &C
+------- = delta * (W[L])^T? * (A[L-1] * (1-A[L-1]))
+&Z[L-1]
+
+if I remember correctly, the W[L] is transposed
 
 now, how do we get the Weight and bias from Z derivative...
 

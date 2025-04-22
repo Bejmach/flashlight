@@ -1,6 +1,6 @@
 [package]
 name = "flashlight"
-version = "0.0.6"
+version = "0.0.8"
 edition = "2024"
 authors = ["Maciej Bejmowicz <bejmach@gmail.com>"]
 description = "neural network library"
@@ -11,4 +11,4 @@ homepage = "https://github.com/Bejmach/flashlight"
 
 [dependencies]
 rand = "0.9.1"
-flashlight_tensor = "0.2.1"
+flashlight_tensor = "0.2.3"
