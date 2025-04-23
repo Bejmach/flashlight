@@ -2,6 +2,9 @@ use flashlight::prelude::*;
 #[allow(unused)]
 use flashlight_tensor::prelude::*;
 
+use rand::prelude::*;
+use std::time::Instant;
+
 fn f32_to_bits(f: f32) -> Vec<bool> {
     let bits = f.to_bits(); // Convert f32 to its byte representation as u32
     (0..32)
@@ -29,87 +32,104 @@ fn floats_to_bools(floats: &[f32]) -> Vec<bool> {
 
 fn main() {
 
-    let mut model: Model = Model::new(&vec!{2, 3, 3, 32}, 1.0, 1.0);
+    let mut rng = rand::rng();
 
-    //println!("Model at start:\n{}\n__________________________", model.full_to_string());
+    let mut model: Model = Model::new(&vec!{2, 16, 1}, (2.0 as f32).sqrt(), (2.0 as f32).sqrt());
 
-    let input_data: Tensor<f32> = Tensor::from_data(&[10.0, 15.0, 25.0, 30.0, 80.0, 20.0], &[3,2]).unwrap().matrix_transpose().unwrap();
-    let mut output_vec: Vec<f32> = Vec::with_capacity(96);
+    let mut input_vec = vec!{67.0, 13.0};
 
-    let mut output_1 = bools_to_floats(&f32_to_bits(25.0));
-    output_vec.append(&mut output_1);
-    let mut output_2 = bools_to_floats(&f32_to_bits(55.0));
-    output_vec.append(&mut output_2);
-    let mut output_3 = bools_to_floats(&f32_to_bits(100.0));
-    output_vec.append(&mut output_3);
+    let output_vec = vec!{1.0};
+    let mut input_data: InputPrePrepared = InputPrePrepared::new(&Tensor::from_data(&input_vec, &[1, input_vec.len() as u32]).unwrap(), &Tensor::from_data(&output_vec, &[1, output_vec.len() as u32]).unwrap());
+    
+    for _i in 0..999{
+        let num1 = rng.random_range(-100.0..100.0);
+        let num2 = rng.random_range(-100.0..100.0);
+        input_vec = vec!{num1, num2};
 
-    let expected_data: Tensor<f32> = Tensor::from_data(&output_vec, &[3, 32]).unwrap().matrix_transpose().unwrap();
+        let output_vec;
+        if num1>num2 {
+            output_vec = vec!{1.0};
+        }
+        else{
+            output_vec = vec!{0.0};
+        }
 
-    let output_data = model.full_forward_propagation(&input_data).unwrap();
+        //println!("Input: {}, {}", input_vec[0], input_vec[1]);
 
-    println!("expected_data: ");
-    for i in 0..input_data.get_sizes()[1]{
-        let input_var: f32 = input_data.matrix_col(i).unwrap().sum();
+        //print!("Output: ");
+        for _i in 0..output_vec.len(){
+            //print!("{}", output_vec[i]);
+        }
+        //println!("");
 
-        print!("{}, ", &input_var);
-    }
-    println!("");
-
-    println!("decoded_data: ");
-    for i in 0..output_data[output_data.len()-1].get_sizes()[1]{
-        let output_vec: Vec<f32> = output_data[output_data.len()-1].matrix_col(i).unwrap().get_data().to_vec();
-
-        print!("{}, ", bits_to_f32(&floats_to_bools(&output_vec)));
-    }
-    println!("");
-    println!("first Cost: {}", cross_entropy_cost(&output_data[output_data.len()-1], &expected_data).unwrap());
-
-    for _i in 0..100000{
-        model.cross_entropy_backprop_loop(&input_data, &expected_data, 0.05);
-        let outpud_data = model.full_forward_propagation(&input_data).unwrap();
-        println!("Cost: {}", cross_entropy_cost(&outpud_data[outpud_data.len()-1], &expected_data).unwrap());
+        input_data.append(&Tensor::from_data(&input_vec, &[1, input_vec.len() as u32]).unwrap(), &Tensor::from_data(&output_vec, &[1, output_vec.len() as u32]).unwrap());
     }
 
-    //println!("Model at end:\n{}\n__________________________", model.full_to_string());
+    input_data.set_bach_size(100);
 
-    let output_data = model.full_forward_propagation(&input_data).unwrap();
+    let input_handler = input_data.to_handler();
 
-    println!("expected_data: ");
-    for i in 0..input_data.get_sizes()[1]{
-        let input_var: f32 = input_data.matrix_col(i).unwrap().sum();
+    let mut correct_counter: u32 = 0;
 
-        print!("{}, ", &input_var);
-    }
-    println!("");
+    for i in 0..input_data.input_data.len(){
+        let outpud_data = model.full_forward_propagation(&input_data.input_data[i].matrix_transpose().unwrap()).unwrap();
 
-    println!("decoded_data: ");
-    for i in 0..output_data[output_data.len()-1].get_sizes()[1]{
-        let output_vec: Vec<f32> = output_data[output_data.len()-1].matrix_col(i).unwrap().get_data().to_vec();
-
-        print!("{}, ", bits_to_f32(&floats_to_bools(&output_vec)));
-    }
-    println!("");
-
-    println!("_____________________\nNew untested data!!!");
-
-    let input_data_2: Tensor<f32> = Tensor::from_data(&[35.0, 5.0], &[1,2]).unwrap().matrix_transpose().unwrap();
-    let _expected_data_2 = Tensor::from_data(&bools_to_floats(&f32_to_bits(40.0)), &[1, 32]).unwrap().matrix_transpose().unwrap();
-
-    let output_data = model.full_forward_propagation(&input_data_2).unwrap();
-
-    println!("expected_data: ");
-    for i in 0..input_data_2.get_sizes()[1]{
-        let input_var: f32 = input_data_2.matrix_col(i).unwrap().sum();
-
-        print!("{}, ", &input_var);
-    }
-    println!("");
-
-    println!("decoded_data: ");
-    for i in 0..output_data[output_data.len()-1].get_sizes()[1]{
-        let output_vec: Vec<f32> = output_data[output_data.len()-1].matrix_col(i).unwrap().get_data().to_vec();
-
-        print!("{}, ", bits_to_f32(&floats_to_bools(&output_vec)));
+        //println!("Sample {}", i);
+        //println!("Data: {}", input_data.input_data[i].matrix_to_string().unwrap());
+        //println!("Expected: {}", input_data.output_data[i].matrix_to_string().unwrap());
+        //println!("Output: {}", outpud_data[outpud_data.len()-1].matrix_to_string().unwrap());
+        if input_data.output_data[i].get_data()[0] == 1.0 && outpud_data[outpud_data.len()-1].get_data()[0] > 0.5 {
+                //println!("correct");
+                correct_counter += 1;
+        }
+        else if input_data.output_data[i].get_data()[0] == 0.0 && outpud_data[outpud_data.len()-1].get_data()[0] < 0.5 {
+                //println!("correct");
+                correct_counter += 1;
+        }
+        else {
+            //println!("WRONG");
+        }
+        //println!("\n");
     }
 
+    println!("Ratio: {}/{}", correct_counter, input_data.input_data.len());
+
+    let start = Instant::now();
+    for epoch in 0..100{
+        println!("\n\nEpoch: {}", epoch);
+        let mut cost_sum: f32 = 0.0;
+        for i in 0..input_handler.len(){
+            model.cross_entropy_backprop_loop(&input_handler.input_bach(i), &input_handler.output_bach(i), 0.1);
+            let outpud_data = model.full_forward_propagation(&input_handler.input_bach(i)).unwrap();
+            cost_sum += cross_entropy_cost(&outpud_data[outpud_data.len()-1], &input_handler.output_bach(i)).unwrap();
+        }
+        println!("avg cost: {}", cost_sum/input_handler.len() as f32);
+    }
+    let duration = start.elapsed();
+    println!("Learning time: {:?}", duration);
+
+    let mut correct_counter: u32 = 0;
+
+    for i in 0..input_data.input_data.len(){
+        let outpud_data = model.full_forward_propagation(&input_data.input_data[i].matrix_transpose().unwrap()).unwrap();
+
+        //println!("Sample {}", i);
+        //println!("Data: {}", input_data.input_data[i].matrix_to_string().unwrap());
+        //println!("Expected: {}", input_data.output_data[i].matrix_to_string().unwrap());
+        //println!("Output: {}", outpud_data[outpud_data.len()-1].matrix_to_string().unwrap());
+        if input_data.output_data[i].get_data()[0] == 1.0 && outpud_data[outpud_data.len()-1].get_data()[0] > 0.5 {
+                //println!("correct");
+                correct_counter += 1;
+        }
+        else if input_data.output_data[i].get_data()[0] == 0.0 && outpud_data[outpud_data.len()-1].get_data()[0] < 0.5 {
+                //println!("correct");
+                correct_counter += 1;
+        }
+        else {
+            //println!("WRONG");
+        }
+        //println!("\n");
+    }
+
+    println!("Ratio: {}/{}", correct_counter, input_data.input_data.len());
 }

@@ -133,9 +133,6 @@ impl Model{
 
         //println!("\nlayer_backprop:\n{}\n\n{}", weight_backprop.matrix_to_string().unwrap(), bias_backprop.matrix_to_string().unwrap());
 
-        let sigmoid_deriv = all_activations[current_layer].tens_mult(&all_activations[current_layer].mult(-1.0).add(1.0)).unwrap();
-        //println!("sigmoid_deriv:\n{}\n", sigmoid_deriv.matrix_to_string().unwrap());
-
         self.weights[current_layer-1] = self.weights[current_layer-1].tens_sub(&weight_backprop.mult(learning_rate)).unwrap();
         self.biases[current_layer-1] = self.biases[current_layer-1].tens_sub(&bias_backprop.mult(learning_rate)).unwrap();
 

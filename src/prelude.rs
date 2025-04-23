@@ -7,4 +7,6 @@ pub use crate::math::derivatives::*;
 pub use crate::math::propagation::*;
 pub use crate::qol::display::*;
 
+pub use crate::input_handler::*;
+
 pub use flashlight_tensor::prelude::*;
