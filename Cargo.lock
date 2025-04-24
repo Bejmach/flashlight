@@ -16,7 +16,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "flashlight"
-version = "0.0.8"
+version = "0.0.9"
 dependencies = [
  "flashlight_tensor",
  "rand",
@@ -24,9 +24,9 @@ dependencies = [
 
 [[package]]
 name = "flashlight_tensor"
-version = "0.2.3"
+version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cc8bd792a3222156d94736b9bba73817110192b5e9aed8b380528003ada1fbc4"
+checksum = "8136093514e5dceea3586448a48fac006a3be84f0268c329bf8da8626e0aaa6b"
 
 [[package]]
 name = "getrandom"

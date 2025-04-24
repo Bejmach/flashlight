@@ -8,7 +8,7 @@ pub struct BackpropagationValue{
     pub biases: Tensor<f32>,
 }
 
-impl Model{
+impl FlashlightModel{
     /// Get prediction of each layer in neural network based on &[f32] input data
     /// where data need to be of length of the input layer
     /// data returned, collumn per sample, row per neuron on layer
@@ -20,7 +20,7 @@ impl Model{
     /// ```
     /// use flashlight::prelude::*;
     ///
-    /// let model: Model = Model::new(&[2, 3, 3, 1], 1.0, 1.0);
+    /// let model: FlashlightModel = FlashlightModel::new(&[2, 3, 3, 1]);
     ///
     /// let input_data: Tensor<f32> = Tensor::from_data(&[50.0, 150.0, 100.0, 220.0, 75.0, 190.0], &[3,
     /// 2]).unwrap().matrix_transpose().unwrap();
@@ -48,32 +48,18 @@ impl Model{
             let weights = &self.weights[i-1];
             let biases = &self.biases[i-1];
             
-            //prints left for future debuging
-            //println!("{}\n*\n{}\n=", weights.matrix_to_string().unwrap(), output_tensor.matrix_to_string().unwrap());
-
             let multiplied_tensor = weights.matrix_mult(&output_tensor).unwrap();
     
-            //println!("{}\n_________", multiplied_tensor.matrix_to_string().unwrap());
-            //println!("{}\n+\n{}", multiplied_tensor.matrix_to_string().unwrap(), biases.matrix_to_string().unwrap());
-
             output_tensor = multiplied_tensor.tens_broadcast_add(&biases).unwrap();
             
-            //println!("=\n{}", output_tensor.matrix_to_string().unwrap());
-
             for row in 0..output_tensor.get_sizes()[0]{
                 for collumn in 0..output_tensor.get_sizes()[1]{
                     output_tensor.set(sigmoid(output_tensor.value(&[row, collumn]).unwrap().clone()), &[row, collumn]);
                 }
             }
 
-            //println!("sigmoid\n{}", output_tensor.matrix_to_string().unwrap());
-
-            //println!("_______________________________________");
-
             all_outputs.push(output_tensor.clone());
-
         }
-        //println!("Propagation finished");
         Some(all_outputs)
     }
     
@@ -84,7 +70,7 @@ impl Model{
     /// ```
     /// use flashlight::prelude::*;
     ///
-    /// let mut model: Model = Model::new(&vec!{2, 3, 3, 1}, 1.0, 1.0);
+    /// let mut model: FlashlightModel = FlashlightModel::new(&vec!{2, 3, 3, 1});
     ///
     /// let input_data: Tensor<f32> = Tensor::from_data(&[10.0, 15.0, 25.0, 30.0, 80.0, 20.0], &[3,2]).unwrap().matrix_transpose().unwrap();
     ///let expected_output: Tensor<f32> = Tensor::from_data(&[sigmoid((10.0+15.0)/100.0), sigmoid((25.0+30.0)/100.0), sigmoid((80.0+20.0)/100.0)], &[3, 1]).unwrap().matrix_transpose().unwrap();
@@ -111,60 +97,30 @@ impl Model{
         //C/Z[L] 
         let mut delta: Tensor<f32> = all_activations[current_layer].tens_sub(real_answers).unwrap();
 
-        //println!("Activation len: {}, weight len: {}", all_activations.len(), self.weights.len());
-
-        //println!("Delta:\n{}\n", delta.matrix_to_string().unwrap());
-
         //1/m
         let const_multiplier = 1.0/real_answers.get_sizes()[1] as f32;
         
         // get average of weight backpropagation calculated by using C/Z[L] * A[L-1] * 1/m
         let weight_backprop = delta.matrix_mult(&all_activations[current_layer-1].matrix_transpose().unwrap()).unwrap().mult(const_multiplier);
-        //println!("{}, {}/ {}", delta.get_sizes()[0], delta.get_sizes()[1], delta.get_sizes().len());
         
         //average of sum of all bach bias backpropagations calculated using sum(C/Z[L]) * 1/m
-        let mut bias_backprop: Tensor<f32> =  Tensor::fill(0.0, &[delta.get_sizes()[0], 1]);
-        for i in 0..delta.get_sizes()[1]{
-            //println!("{}\n\n{}", bias_backprop.matrix_to_string().unwrap(), &delta.matrix_to_string().unwrap());
-            //println!("{}", &delta.matrix_col(i).unwrap().transform(&[delta.get_sizes()[0], 1]).unwrap().matrix_to_string().unwrap());
-            bias_backprop = bias_backprop.tens_add(&delta.matrix_col(i).unwrap().transform(&[delta.get_sizes()[0], 1]).unwrap()).unwrap();
-        }
-        bias_backprop = bias_backprop.mult(const_multiplier);
-
-        //println!("\nlayer_backprop:\n{}\n\n{}", weight_backprop.matrix_to_string().unwrap(), bias_backprop.matrix_to_string().unwrap());
-
+        let bias_backprop: Tensor<f32> =  delta.matrix_col_sum().unwrap().mult(const_multiplier);
+        
         self.weights[current_layer-1] = self.weights[current_layer-1].tens_sub(&weight_backprop.mult(learning_rate)).unwrap();
         self.biases[current_layer-1] = self.biases[current_layer-1].tens_sub(&bias_backprop.mult(learning_rate)).unwrap();
 
         for i in 1..self.layers.len()-1{
             let current_layer = current_layer-i;
 
-            //println!("Current layer: {}", current_layer);
-
-            //println!("last delta:\n{}\n", delta.matrix_to_string().unwrap());
-
             let weight = &self.weights[current_layer].matrix_transpose().unwrap();
-            //println!("weight:\n{}\n", weight.matrix_to_string().unwrap());
 
             let activation_derivative = all_activations[current_layer].tens_mult(&all_activations[current_layer].mult(-1.0).add(1.0)).unwrap();
-            //println!("activation_derivative:\n{}\n", activation_derivative.matrix_to_string().unwrap());
 
             delta = weight.matrix_mult(&delta).unwrap().tens_mult(&activation_derivative).unwrap();
-            //println!("new_delta:\n{}\n", delta.matrix_to_string().unwrap());
             
-            //println!("last weight:\n{}\n", self.weights[current_layer-1].matrix_to_string().unwrap());
             let weight_backprop = delta.matrix_mult(&all_activations[current_layer-1].matrix_transpose().unwrap()).unwrap().mult(const_multiplier);
-            //println!("weight_backprop:\n{}\n", weight_backprop.matrix_to_string().unwrap());
 
-            let mut bias_backprop: Tensor<f32> =  Tensor::fill(0.0, &[delta.get_sizes()[0], 1]);
-            for i in 0..delta.get_sizes()[1]{
-                //println!("{}\n\n{}", bias_backprop.matrix_to_string().unwrap(), &delta.matrix_to_string().unwrap());
-                //println!("{}", &delta.matrix_col(i).unwrap().transform(&[delta.get_sizes()[0], 1]).unwrap().matrix_to_string().unwrap());
-                bias_backprop = bias_backprop.tens_add(&delta.matrix_col(i).unwrap().transform(&[delta.get_sizes()[0], 1]).unwrap()).unwrap();
-            }
-            bias_backprop = bias_backprop.mult(const_multiplier);
-            //println!("last bias:\n{}\n", self.biases[current_layer-1].matrix_to_string().unwrap());
-            //println!("bias_backprop:\n{}\n", bias_backprop.matrix_to_string().unwrap());
+            let mut bias_backprop: Tensor<f32> =  delta.matrix_col_sum().unwrap().mult(const_multiplier);
 
             self.weights[current_layer-1] = self.weights[current_layer-1].tens_sub(&weight_backprop.mult(learning_rate)).unwrap();
             self.biases[current_layer-1] = self.biases[current_layer-1].tens_sub(&bias_backprop.mult(learning_rate)).unwrap();

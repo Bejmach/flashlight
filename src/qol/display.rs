@@ -1,7 +1,7 @@
 use crate::flashlight_model::*;
 use flashlight_tensor::prelude::*;
 
-impl Model{
+impl FlashlightModel{
     pub fn aesthetic_to_string(&self) -> String{
         
         let mut longest_layer: u32 = 0;

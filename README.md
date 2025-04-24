@@ -12,15 +12,17 @@
 - Neural network structure
 - forward propagation
 - cost
-- BACKPROP IS WORKING!!! (dont ask for math. I kinda did something using the explanation written in txt file in repo. Its not entirely correct, but a concept is there)
+- backpropagation, but still in dev
+- normalizing input when using input handler(create InputPrePrepared(name will change), append input and output data, set bach size, generate input handler, run backprop with baches from input handler)
 
 ## To do
+- cleaner code
+- relu instead of sigmoid on hidden
 - easier usage
-- f64 and f128 support(if I will try to do a more acurate calculator)
+- f64 and f128 support
 - saving and loading the model
 
-## Additional info
-- Don't use that for creating calculator. I tried, and you can see it in main.rs in repo, and a small difference in output genereta a big difference in real number, like expected = 0.7310586 = 100, output = 0.731054 = 43
+> I wanted to be able to publish a pseudo finished version after version 0.0.10, but it will propably need to wait. Will try to publish V0.1.0 in like 3 months, because for the next month I wont have much time for this, and I want to also work on some games.
 
 ## Dependencies
 - [flashlight_tensor](https://crates.io/crates/flashlight_tensor)
@@ -40,4 +42,8 @@ I hope you had a good time reading this short personal story. I just rly wanted 
 P.S.
 I literally have no idea what I'm doing here. I just thought one day, "Creating neural network from scratch while learning new language is a great idea". I dont even know how all math is working. I understand the concept, and try to deal with it.
 
+### Patch notes
+- 0.0.9
+  - Input handler
+  - Input normalization
 
