@@ -9,7 +9,9 @@ fn main() {
 
     let mut rng = rand::rng();
 
-    let mut model: FlashlightModel = FlashlightModel::new(&vec!{2, 16, 1});
+    let mut model: FlashlightModel = FlashlightModel::new(&vec!{2, 3, 1});
+
+    let learning_rate: f32 = 0.01;
 
     let mut input_vec = vec!{67.0, 13.0};
 
@@ -71,14 +73,22 @@ fn main() {
 
     let start = Instant::now();
     for epoch in 0..=10000{
-        println!("\nEpoch: {}", epoch);
-        let mut cost_sum: f32 = 0.0;
-        for i in 0..input_handler.len(){
-            model.cross_entropy_backprop_loop(&input_handler.input_bach(i), &input_handler.output_bach(i), 0.1);
-            let outpud_data = model.full_forward_propagation(&input_handler.input_bach(i)).unwrap();
-            cost_sum += cross_entropy_cost(&outpud_data[outpud_data.len()-1], &input_handler.output_bach(i)).unwrap();
+        if epoch % 100 == 0{
+            println!("\nEpoch: {}", epoch);
+            let mut cost_sum: f32 = 0.0;
+            for i in 0..input_handler.len(){
+                model.cross_entropy_backprop_loop(&input_handler.input_bach(i), &input_handler.output_bach(i), learning_rate);
+                let outpud_data = model.full_forward_propagation(&input_handler.input_bach(i)).unwrap();
+                cost_sum += cross_entropy_cost(&outpud_data[outpud_data.len()-1], &input_handler.output_bach(i)).unwrap();
+            }
+            println!("avg cost: {}", cost_sum/input_handler.len() as f32);
         }
-        println!("avg cost: {}", cost_sum/input_handler.len() as f32);
+
+        else{
+            for i in 0..input_handler.len(){
+                model.cross_entropy_backprop_loop(&input_handler.input_bach(i), &input_handler.output_bach(i), learning_rate);
+            }
+        }
     }
     let duration = start.elapsed();
     println!("Learning time: {:?}", duration);
