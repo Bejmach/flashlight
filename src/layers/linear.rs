@@ -1,7 +1,7 @@
 use flashlight_tensor::prelude::*;
 use rand::Rng;
 
-use crate::layers::Layer;
+use crate::{layers::Layer, prelude::xavier_weights};
 
 pub struct Linear{
     pub weights: Tensor<f32>,
@@ -11,7 +11,9 @@ pub struct Linear{
 }
 
 impl Linear{
-     pub fn new(input_size: u32, output_size: u32, learning_rate: f32, rand_range: f32) -> Self{
+     pub fn new(input_size: u32, output_size: u32, learning_rate: f32) -> Self{
+        let rand_range = xavier_weights(input_size, output_size);
+
         let mut weight_data: Vec<f32> = Vec::with_capacity((input_size * output_size) as usize);
         let mut bias_data: Vec<f32> = Vec::with_capacity(output_size as usize);
 
@@ -53,12 +55,12 @@ impl Layer for Linear{
 
         let weight_grad = grad_output.matrix_mul(&self.input_cache.clone().unwrap().matrix_transpose().unwrap()).unwrap();
     
-        let bias_grad = grad_output.matrix_col_sum().unwrap().mul(self.input_cache.clone().unwrap().get_sizes()[0] as f32);
+        let bias_grad = grad_output.matrix_col_sum().unwrap().mul(1.0 / self.input_cache.clone().unwrap().get_sizes()[0] as f32);
 
         self.weights = self.weights.tens_sub(&weight_grad.mul(self.learning_rate)).unwrap();
         self.biases = self.biases.tens_sub(&bias_grad.mul(self.learning_rate)).unwrap();
 
-        let input_grad = self.weights.clone();
+        let input_grad = self.weights.matrix_transpose().unwrap().matrix_mul(grad_output).unwrap();
 
         input_grad
     }

@@ -17,8 +17,8 @@ pub struct NewModel{
 impl NewModel{
     fn new() -> Self{
         Self{
-            linear1: Linear::new(2, 3, 0.01, xavier_weights(2, 1)),
-            linear2: Linear::new(3, 1, 0.01, xavier_weights(2, 1)),
+            linear1: Linear::new(2, 16, 0.01),
+            linear2: Linear::new(16, 1, 0.01),
             activation: Relu::new(),
             output_activation: Sigmoid::new(),
         }
@@ -46,24 +46,30 @@ impl Model for NewModel{
 }
 
 fn main() {
-    let input: Tensor<f32> = Tensor::from_data(&[50.0, 70.0, 20.0, 90.0, 99.0, 1.0], &[3, 2]).unwrap().matrix_transpose().unwrap();
-    let target: Tensor<f32> = Tensor::from_data(&[0.0, 0.0, 1.0], &[1, 3]).unwrap();
+    let mut pre_prepared: InputPrePrepared = InputPrePrepared::new(&Tensor::from_data(&[50.0, 70.0], &[1, 2]).unwrap(), &Tensor::from_data(&[0.0], &[1, 1]).unwrap());
+    pre_prepared.append(&Tensor::from_data(&[-100.0, 100.0], &[1, 2]).unwrap(), &Tensor::from_data(&[0.0], &[1, 1]).unwrap());
+    pre_prepared.append(&Tensor::from_data(&[100.0, -100.0], &[1, 2]).unwrap(), &Tensor::from_data(&[1.0], &[1, 1]).unwrap());
+
+    pre_prepared.set_bach_size(3);
+
+    let handler = pre_prepared.to_handler();
 
     let mut model: NewModel = NewModel::new();
 
-    let number_of_epochs = 1000000;
+    let number_of_epochs = 100000;
 
     for epoch in 0..=number_of_epochs{
-        let output = model.forward(input.clone());
+        for i in 0..handler.len(){
+            let output = model.forward(handler.input_bach(i));
+            
+            let grad_output = model.grad_output(&handler.output_bach(i));
 
-        println!("output:\n{}\n\ntarget:\n{}\n", output.matrix_to_string().unwrap(), target.matrix_to_string().unwrap());
+            model.backward(grad_output);
 
-        println!("Epoch {}, Cost: {}", epoch, cross_entropy_cost(&output, &target).unwrap());
-
-        let grad_output = model.grad_output(&target);
-
-        println!("gradient: \n{}\n\n", grad_output.matrix_to_string().unwrap());
-
-        model.backward(grad_output);
+            if epoch % 100 == 0{
+                println!("Epoch {}, Cost: {}", epoch, cross_entropy_cost(&output, &handler.output_bach(i)).unwrap());
+                println!("output:\n{}\n\ntarget:\n{}\n", output.matrix_to_string().unwrap(), handler.output_bach(i).matrix_to_string().unwrap());
+            }
+        }
     }
 }
