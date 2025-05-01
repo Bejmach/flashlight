@@ -12,7 +12,8 @@
 - Neural network structure
 - forward propagation
 - cost
-- BACKPROP IS WORKING!!! (dont ask for math. I kinda did something using the explanation written in txt file in repo. Its not entirely correct, but a concept is there)
+- backpropagation
+- batch handler kinda works, still need to upgrade it
 
 ## To do
 - easier usage
@@ -47,4 +48,6 @@ I literally have no idea what I'm doing here. I just thought one day, "Creating 
   - Input normalization
 - 0.0.10
   - tbh, nothing much
+- 0.0.11
+  - modular model
 

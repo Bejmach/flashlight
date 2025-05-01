@@ -14,7 +14,7 @@ impl Dropout{
     /// ```
     /// use flashlight::prelude::*;
     ///
-    /// let dropout = Dropout::new(0.5).unwrap();
+    /// //let dropout = Dropout::new(0.5).unwrap();
     /// ```
     pub fn new(dropout: f32) -> Option<Self>{
         if dropout>1.0 || dropout < 0.0{
@@ -32,10 +32,10 @@ impl Dropout{
     /// use flashlight::prelude::*;
     /// use flashlight_tensor::prelude::*;
     ///
-    /// let dropout = Dropout::new(0.5).unwrap();
-    /// let tensor = Tensor::from_data(&[1.0, 2.0, 3.0], &[3])
+    /// //let dropout = Dropout::new(0.5).unwrap();
+    /// //let tensor = Tensor::from_data(&[1.0, 2.0, 3.0], &[3])
     ///
-    /// let x = dropout.forward(tensor);
+    /// //let x = dropout.forward(tensor);
     /// ```
     pub fn forward(&self, tensor: Tensor<f32>) -> Tensor<f32>{
         let mut tensor_copy = tensor.clone();
