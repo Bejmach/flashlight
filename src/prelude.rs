@@ -6,8 +6,9 @@ pub use crate::math::sigmoid::*;
 pub use crate::math::derivatives::*;
 pub use crate::math::propagation::*;
 pub use crate::qol::display::*;
-pub use crate::layers::*;
-pub use crate::layers::activations::*;
+pub use crate::layers::linear::*;
+pub use crate::layers::activations::sigmoid::*;
+pub use crate::layers::activations::relu::*;
 
 pub use crate::input_handler::*;
 

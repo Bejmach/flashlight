@@ -4,10 +4,19 @@ use crate::math::derivatives::*;
 use flashlight_tensor::prelude::*;
 use rand::prelude::*;
 
+pub trait Model{
+    fn forward(&mut self, input: Tensor<f32>) -> Tensor<f32>;
+    fn backward(&mut self, grad_output: Tensor<f32>);
+}
+
 pub struct FlashlightModel{
     pub layers: Vec<u32>,
     pub weights: Vec<Tensor<f32>>,
     pub biases: Vec<Tensor<f32>>,
+}
+
+pub fn xavier_weights(input_neurons: u32, output_neurons: u32) -> f32{
+    (6.0/((input_neurons + output_neurons) as f32)).sqrt()
 }
 
 impl FlashlightModel{

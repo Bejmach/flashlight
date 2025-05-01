@@ -1,8 +1,8 @@
 use flashlight_tensor::tensor::Tensor;
 use rand::{rng, Rng};
-
+/// Dropout currently not implemented properly, dont use
 pub struct Dropout{
-    dropout: f32;
+    dropout: f32,
 }
 
 impl Dropout{
