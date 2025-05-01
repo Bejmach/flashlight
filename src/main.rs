@@ -127,7 +127,7 @@ fn main() {
 
             cost_sum += cross_entropy_cost(&output, &handler.output_bach(i)).unwrap();
         }
-        if epoch % 100 == 0{
+        if epoch % 10 == 0{
             println!("Epoch {}, Cost: {}", epoch, cost_sum/handler.len() as f32);
         }
     }
