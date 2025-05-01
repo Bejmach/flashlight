@@ -46,19 +46,78 @@ impl Model for NewModel{
 }
 
 fn main() {
-    let mut pre_prepared: InputPrePrepared = InputPrePrepared::new(&Tensor::from_data(&[50.0, 70.0], &[1, 2]).unwrap(), &Tensor::from_data(&[0.0], &[1, 1]).unwrap());
-    pre_prepared.append(&Tensor::from_data(&[-100.0, 100.0], &[1, 2]).unwrap(), &Tensor::from_data(&[0.0], &[1, 1]).unwrap());
-    pre_prepared.append(&Tensor::from_data(&[100.0, -100.0], &[1, 2]).unwrap(), &Tensor::from_data(&[1.0], &[1, 1]).unwrap());
+    let mut rng = rand::rng();
+    let mut input_vec = vec!{-100.0, 100.0};
 
-    pre_prepared.set_bach_size(3);
+    let output_vec = vec!{0.0};
+    let mut input_data: InputPrePrepared = InputPrePrepared::new(&Tensor::from_data(&input_vec, &[1, input_vec.len() as u32]).unwrap(), &Tensor::from_data(&output_vec, &[1, output_vec.len() as u32]).unwrap());
+    
+    input_vec = vec!{100.0, -100.0};
+    let output_vec = vec!{1.0};
 
-    let handler = pre_prepared.to_handler();
+    input_data.append(&Tensor::from_data(&input_vec, &[1, input_vec.len() as u32]).unwrap(), &Tensor::from_data(&output_vec, &[1, output_vec.len() as u32]).unwrap());
+
+    for _i in 0..998{
+        let num1 = rng.random_range(-100.0..100.0);
+        let num2 = rng.random_range(-100.0..100.0);
+        input_vec = vec!{num1, num2};
+
+        let output_vec;
+        if num1>num2 {
+            output_vec = vec!{1.0};
+        }
+        else{
+            output_vec = vec!{0.0};
+        }
+
+        //println!("Input: {}, {}", input_vec[0], input_vec[1]);
+
+        //print!("Output: ");
+        for i in 0..output_vec.len(){
+            //print!("{}", output_vec[i]);
+        }
+        //println!("");
+
+        input_data.append(&Tensor::from_data(&input_vec, &[1, input_vec.len() as u32]).unwrap(), &Tensor::from_data(&output_vec, &[1, output_vec.len() as u32]).unwrap());
+    }
+
+    input_data.set_bach_size(100);
+
+    let handler = input_data.to_handler();
 
     let mut model: NewModel = NewModel::new();
 
-    let number_of_epochs = 100000;
+    let mut correct_counter: u32 = 0;
 
+    for i in 0..input_data.input_data.len(){
+        let output_data = model.forward(input_data.input_data[i].matrix_transpose().unwrap());
+
+        //println!("Sample {}", i);
+        //println!("Data: {}", input_data.input_data[i].matrix_to_string().unwrap());
+        //println!("Expected: {}", input_data.output_data[i].matrix_to_string().unwrap());
+        //println!("Output: {}", outpud_data[outpud_data.len()-1].matrix_to_string().unwrap());
+        if input_data.output_data[i].get_data()[0] == 1.0 && output_data.get_data()[0] > 0.5 {
+                //println!("correct");
+                correct_counter += 1;
+        }
+        else if input_data.output_data[i].get_data()[0] == 0.0 && output_data.get_data()[0] < 0.5 {
+                //println!("correct");
+                correct_counter += 1;
+        }
+        else {
+            //println!("WRONG");
+        }
+        //println!("\n");
+    }
+    println!("Ratio: {}/{}", correct_counter, input_data.input_data.len());
+
+    let number_of_epochs = 100;
+
+    let start = Instant::now();
     for epoch in 0..=number_of_epochs{
+    
+        let mut cost_sum: f32 = 0.0;
+
         for i in 0..handler.len(){
             let output = model.forward(handler.input_bach(i));
             
@@ -66,10 +125,36 @@ fn main() {
 
             model.backward(grad_output);
 
-            if epoch % 100 == 0{
-                println!("Epoch {}, Cost: {}", epoch, cross_entropy_cost(&output, &handler.output_bach(i)).unwrap());
-                println!("output:\n{}\n\ntarget:\n{}\n", output.matrix_to_string().unwrap(), handler.output_bach(i).matrix_to_string().unwrap());
-            }
+            cost_sum += cross_entropy_cost(&output, &handler.output_bach(i)).unwrap();
+        }
+        if epoch % 100 == 0{
+            println!("Epoch {}, Cost: {}", epoch, cost_sum/handler.len() as f32);
         }
     }
+    let duration = start.elapsed();
+
+    let mut correct_counter: u32 = 0;
+
+    for i in 0..input_data.input_data.len(){
+        let output_data = model.forward(input_data.input_data[i].matrix_transpose().unwrap());
+
+        //println!("Sample {}", i);
+        //println!("Data: {}", input_data.input_data[i].matrix_to_string().unwrap());
+        //println!("Expected: {}", input_data.output_data[i].matrix_to_string().unwrap());
+        //println!("Output: {}", output_data.matrix_to_string().unwrap());
+        if input_data.output_data[i].get_data()[0] == 1.0 && output_data.get_data()[0] > 0.5 {
+                //println!("correct");
+                correct_counter += 1;
+        }
+        else if input_data.output_data[i].get_data()[0] == 0.0 && output_data.get_data()[0] < 0.5 {
+                //println!("correct");
+                correct_counter += 1;
+        }
+        else {
+            //println!("WRONG");
+        }
+        //println!("\n");
+    }
+    println!("Ratio: {}/{}", correct_counter, input_data.input_data.len());
+    println!("Learning time: {:?}", duration);
 }

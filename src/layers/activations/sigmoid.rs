@@ -13,15 +13,12 @@ impl Sigmoid{
         }
     }
     pub fn grad_output(&self, target: &Tensor<f32>) -> Tensor<f32>{
-        if self.input_cache.is_none() || target.get_sizes()!=self.input_cache.clone().unwrap().get_sizes(){
+        if self.input_cache.is_none(){
             panic!();
         }
 
-        let y_a = target.tens_div(&self.input_cache.clone().unwrap()).unwrap();
-        let one_y_a = target.mul(-1.0).add(1.0).tens_div(&self.input_cache.clone().unwrap().mul(-1.0).add(1.0)).unwrap();
-
-        y_a.tens_sub(&one_y_a).unwrap().mul(-1.0)
-        
+        let sigmoid_out = self.input_cache.as_ref().unwrap().sigmoid();
+        sigmoid_out.tens_sub(target).unwrap()
     }
 }
 

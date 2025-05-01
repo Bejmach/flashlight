@@ -35,8 +35,6 @@ impl InputPrePrepared{
 
     pub fn to_handler(&mut self) -> InputHandler{
         let mut rng = rand::rng();
-        self.input_data.shuffle(&mut rng);
-        self.output_data.shuffle(&mut rng);
 
         let mut input_tensor = self.input_data[0].clone();
         for i in 1..self.input_data.len(){
