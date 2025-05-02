@@ -1,7 +1,4 @@
-use crate::flashlight_model::*;
-
 use flashlight_tensor::prelude::*;
-use super::sigmoid::*;
 
 /// get cost of neural network using y_hat(predicted answers) and y(real answers)
 /// where each row of y and y_hat is one evaluation

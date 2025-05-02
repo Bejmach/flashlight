@@ -135,18 +135,30 @@ fn main() {
 
     let mut correct_counter: u32 = 0;
 
-    for i in 0..input_data.input_data.len(){
-        let output_data = model.forward(input_data.input_data[i].matrix_transpose().unwrap());
+    for i in 0..1000{
+        let num1 = rng.random_range(-100.0..100.0);
+        let num2 = rng.random_range(-100.0..100.0);
+        input_vec = vec!{num1, num2};
 
-        //println!("Sample {}", i);
-        //println!("Data: {}", input_data.input_data[i].matrix_to_string().unwrap());
-        //println!("Expected: {}", input_data.output_data[i].matrix_to_string().unwrap());
-        //println!("Output: {}", output_data.matrix_to_string().unwrap());
-        if input_data.output_data[i].get_data()[0] == 1.0 && output_data.get_data()[0] > 0.5 {
+        let output_vec;
+        if num1>num2 {
+            output_vec = vec!{1.0};
+        }
+        else{
+            output_vec = vec!{0.0};
+        }
+        let input_data = Tensor::from_data(&input_vec, &[2, 1]).unwrap();
+        let output_data = model.forward(input_data.clone());
+
+        println!("Sample {}", i);
+        println!("Data: {}", input_data.matrix_transpose().unwrap().matrix_to_string().unwrap());
+        println!("Expected: {}", output_vec[0]);
+        println!("Output: {}", output_data.matrix_to_string().unwrap());
+        if output_vec[0] == 1.0 && output_data.get_data()[0] > 0.5 {
                 //println!("correct");
                 correct_counter += 1;
         }
-        else if input_data.output_data[i].get_data()[0] == 0.0 && output_data.get_data()[0] < 0.5 {
+        else if output_vec[0] == 0.0 && output_data.get_data()[0] < 0.5 {
                 //println!("correct");
                 correct_counter += 1;
         }

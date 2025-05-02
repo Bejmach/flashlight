@@ -2,12 +2,14 @@ use flashlight_tensor::prelude::*;
 
 use rand::seq::SliceRandom;
 
+/// Work in progress, will be made for like 0.0.15 hopefully
 pub struct InputPrePrepared{
     pub input_data: Vec<Tensor<f32>>,
     pub output_data: Vec<Tensor<f32>>,
     bach_size: u32,
 }
 
+/// Work in progress, will be made for like 0.0.15 hopefully
 pub struct InputHandler{
     input_data: Tensor<f32>,
     output_data: Tensor<f32>,

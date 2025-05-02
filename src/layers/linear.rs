@@ -3,6 +3,7 @@ use rand::Rng;
 
 use crate::{layers::Layer, prelude::xavier_weights};
 
+/// Linear layer for neural network
 pub struct Linear{
     pub weights: Tensor<f32>,
     pub biases: Tensor<f32>,
@@ -11,6 +12,17 @@ pub struct Linear{
 }
 
 impl Linear{
+    
+    /// Create new linear layer using input_size, output_size and learning_rate
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use flashlight::prelude::*;
+    ///
+    /// let linear = Linear::new(2, 1, 0.1);
+    /// ```
+
      pub fn new(input_size: u32, output_size: u32, learning_rate: f32) -> Self{
         let rand_range = xavier_weights(input_size, output_size);
 
@@ -36,7 +48,7 @@ impl Linear{
 }
 
 impl Layer for Linear{
-   
+   /// Forward propagation for linear layer. returns Tensor<f32>
     fn forward(&mut self, data: &Tensor<f32>) -> Tensor<f32>{
 
         self.input_cache = Some(data.clone());
@@ -47,7 +59,8 @@ impl Layer for Linear{
 
         bias_data
     }
-
+    /// Backward propagation for linear laer. Returns Tensor<f32> that is a partial derivative to
+    /// next layer/activation to this layer
     fn backward(&mut self, grad_output: &Tensor<f32>) -> Tensor<f32>{
         if self.input_cache.is_none(){
             panic!("Program paniced!\nNo input cache in layer. Perform a forward pass before backward");
