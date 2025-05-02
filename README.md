@@ -41,6 +41,13 @@ flashlight_tensor = "0.2.6"
 use flashlight::prelude::*;
 use flashlight_tensor::prelude::*;
 
+pub struct NewModel{
+    linear1: Linear,
+    linear2: Linear,
+    activation: Relu,
+    output_activation: Sigmoid,
+}
+
 impl NewModel{
     fn new() -> Self{
         Self{
