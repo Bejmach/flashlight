@@ -2,7 +2,7 @@
 
 [![Rust](https://github.com/Bejmach/flashlight/actions/workflows/rust.yml/badge.svg?event=push)](https://github.com/Bejmach/flashlight/actions/workflows/rust.yml)
 [![Crates.io](https://img.shields.io/crates/v/flashlight.svg)](https://crates.io/crates/flashlight)
-[![Docs.rs](https://docs.rs/flashlight_tensor/badge.svg)](https://docs.rs/flashlight_tensor)
+[![Docs.rs](https://docs.rs/flashlight_tensor/badge.svg)](https://docs.rs/flashlight)
 
 > Package currently in development, use something else, like burn
 
@@ -34,7 +34,7 @@ flashlight_tensor = "0.2.6"
 
 ## Documentation
 
-[Docs](https://docs.rs/flashlight_tensor/latest/flashlight_tensor/)
+[Docs](https://docs.rs/flashlight/latest/flashlight/)
 
 ## Quick Start
 ```rust
