@@ -2,68 +2,86 @@ use flashlight_tensor::prelude::*;
 
 use rand::seq::SliceRandom;
 
+pub struct Sample{
+    pub input_data: Tensor<f32>,
+    pub output_data: Tensor<f32>,
+}
+
 /// Work in progress, will be made for like 0.0.15 hopefully
-pub struct InputPrePrepared{
-    pub input_data: Vec<Tensor<f32>>,
-    pub output_data: Vec<Tensor<f32>>,
+pub struct DataPreparaton{
+    pub data: Vec<Sample>,
     bach_size: u32,
 }
 
 /// Work in progress, will be made for like 0.0.15 hopefully
-pub struct InputHandler{
+pub struct DataHandler{
     input_data: Tensor<f32>,
     output_data: Tensor<f32>,
     bach_size: u32,
 }
 
-impl InputPrePrepared{
-    pub fn new(input_sample: &Tensor<f32>, output_sample: &Tensor<f32>) -> Self{
+impl DataPreparaton{
+    pub fn new() -> Self{
         Self{
-            input_data: vec!{input_sample.clone()},
-            output_data: vec!{output_sample.clone()},
+            data: Vec::new(),
             bach_size: 1,
         }
     }
     pub fn set_bach_size(&mut self, _bach_size: u32){
-        if self.input_data.len() % _bach_size as usize == 0 {
+        if self.data.len() % _bach_size as usize == 0 {
             self.bach_size = _bach_size;
         }
     }
     pub fn append(&mut self, input_sample: &Tensor<f32>, output_sample: &Tensor<f32>){
-        self.input_data.push(input_sample.clone());
-        self.output_data.push(output_sample.clone());
+        self.data.push(Sample{
+            input_data: input_sample.clone(),
+            output_data: output_sample.clone(),
+        });
         self.bach_size = 1;
     }
 
-    pub fn to_handler(&mut self) -> InputHandler{
+    pub fn to_handler(&mut self) -> DataHandler{
         let mut rng = rand::rng();
 
-        let mut input_tensor = self.input_data[0].clone();
-        for i in 1..self.input_data.len(){
-            input_tensor = input_tensor.append(&self.input_data[i]).unwrap();
+        self.data.shuffle(&mut rng);
+
+        let mut input_tensor = self.data[0].input_data.clone();
+        for i in 1..self.data.len(){
+            input_tensor = input_tensor.append(&self.data[i].input_data).unwrap();
         }
 
-        let input_mean: f32 = input_tensor.sum() / input_tensor.count_data() as f32;
+        let mut normalized_data: Vec<f32> = Vec::with_capacity(input_tensor.count_data());
 
-        let mut input_std_dev: f32 = 0.0;
-        for i in 0..input_tensor.get_data().len(){
-            input_std_dev += input_tensor.get_data()[i].powi(2);
+        //collums holds same element in each sample, so I use normalization across collumns
+        for i in 0..input_tensor.get_sizes()[1]{
+            let input_col = input_tensor.matrix_col(i).unwrap();
+
+            let col_mean: f32 = input_col.sum() / input_col.count_data() as f32;
+
+            let mut col_std_dev: f32 = 0.0;
+            for i in 0..input_col.count_data(){
+                let diff = input_col.get_data()[i] - col_mean;
+                col_std_dev += diff * diff;
+            }
+            col_std_dev = (col_std_dev/input_col.count_data() as f32).sqrt();
+
+            if col_std_dev < 1e-8 {
+                col_std_dev = 1e-8; 
+            }
+
+            for j in 0..input_col.count_data(){
+                normalized_data.push((input_col.get_data()[j] - col_mean) / col_std_dev);
+            }
         }
-        input_std_dev = (input_std_dev/input_tensor.count_data() as f32).sqrt();
 
-        let mut normalized_vec: Vec<f32> = Vec::with_capacity(input_tensor.count_data());
-        for i in 0..input_tensor.get_data().len(){
-            normalized_vec.push((input_tensor.get_data()[i] - input_mean) / input_std_dev);
+        let normalized_tensor: Tensor<f32> = Tensor::from_data(&normalized_data, &[input_tensor.get_sizes()[1], input_tensor.get_sizes()[0]]).unwrap().matrix_transpose().unwrap();
+
+        let mut output_tensor = self.data[0].output_data.clone();
+        for i in 1..self.data.len(){
+            output_tensor = output_tensor.append(&self.data[i].output_data).unwrap();
         }
 
-        let normalized_tensor: Tensor<f32> = Tensor::from_data(&normalized_vec, &input_tensor.get_sizes()).unwrap();
-
-        let mut output_tensor = self.output_data[0].clone();
-        for i in 1..self.output_data.len(){
-            output_tensor = output_tensor.append(&self.output_data[i]).unwrap();
-        }
-
-        InputHandler{
+        DataHandler{
             input_data: normalized_tensor,
             output_data: output_tensor,
             bach_size: self.bach_size,
@@ -71,7 +89,7 @@ impl InputPrePrepared{
     }
 }
 
-impl InputHandler{
+impl DataHandler{
 
     pub fn len(&self) -> u32{
         self.input_data.get_sizes()[0] / self.bach_size

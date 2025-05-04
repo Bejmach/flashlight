@@ -52,23 +52,18 @@ impl Model for NewModel{
 }
 
 fn main() {
-    let number_of_epochs = 1000;
+    let number_of_epochs = 10000;
+    let number_of_samples = 1000;
+    let bach_size = 100;
+
+    let mut input_data: DataPreparaton = DataPreparaton::new();
 
     let mut rng = rand::rng();
-    let mut input_vec = vec!{-100.0, 100.0};
 
-    let output_vec = vec!{0.0};
-    let mut input_data: InputPrePrepared = InputPrePrepared::new(&Tensor::from_data(&input_vec, &[1, input_vec.len() as u32]).unwrap(), &Tensor::from_data(&output_vec, &[1, output_vec.len() as u32]).unwrap());
-    
-    input_vec = vec!{100.0, -100.0};
-    let output_vec = vec!{1.0};
-
-    input_data.append(&Tensor::from_data(&input_vec, &[1, input_vec.len() as u32]).unwrap(), &Tensor::from_data(&output_vec, &[1, output_vec.len() as u32]).unwrap());
-
-    for _i in 0..998{
+    for _i in 0..number_of_samples{
         let num1 = rng.random_range(-100.0..100.0);
         let num2 = rng.random_range(-100.0..100.0);
-        input_vec = vec!{num1, num2};
+        let input_vec = vec!{num1, num2};
 
         let output_vec;
         if num1>num2 {
@@ -89,7 +84,7 @@ fn main() {
         input_data.append(&Tensor::from_data(&input_vec, &[1, input_vec.len() as u32]).unwrap(), &Tensor::from_data(&output_vec, &[1, output_vec.len() as u32]).unwrap());
     }
 
-    input_data.set_bach_size(100);
+    input_data.set_bach_size(bach_size);
 
     let handler = input_data.to_handler();
 
@@ -97,18 +92,18 @@ fn main() {
 
     let mut correct_counter: u32 = 0;
 
-    for i in 0..input_data.input_data.len(){
-        let output_data = model.forward(input_data.input_data[i].matrix_transpose().unwrap());
+    for i in 0..input_data.data.len(){
+        let output_data = model.forward(input_data.data[i].input_data.matrix_transpose().unwrap());
 
         //println!("Sample {}", i);
         //println!("Data: {}", input_data.input_data[i].matrix_to_string().unwrap());
         //println!("Expected: {}", input_data.output_data[i].matrix_to_string().unwrap());
         //println!("Output: {}", outpud_data[outpud_data.len()-1].matrix_to_string().unwrap());
-        if input_data.output_data[i].get_data()[0] == 1.0 && output_data.get_data()[0] > 0.5 {
+        if input_data.data[i].output_data.get_data()[0] == 1.0 && output_data.get_data()[0] > 0.5 {
                 //println!("correct");
                 correct_counter += 1;
         }
-        else if input_data.output_data[i].get_data()[0] == 0.0 && output_data.get_data()[0] < 0.5 {
+        else if input_data.data[i].output_data.get_data()[0] == 0.0 && output_data.get_data()[0] < 0.5 {
                 //println!("correct");
                 correct_counter += 1;
         }
@@ -117,7 +112,7 @@ fn main() {
         }
         //println!("\n");
     }
-    println!("Ratio: {}/{}", correct_counter, input_data.input_data.len());
+    println!("Ratio: {}/{}", correct_counter, number_of_samples);
 
     
 
@@ -143,10 +138,10 @@ fn main() {
 
     let mut correct_counter: u32 = 0;
 
-    for i in 0..1000{
+    for i in 0..number_of_samples{
         let num1 = rng.random_range(-100.0..100.0);
         let num2 = rng.random_range(-100.0..100.0);
-        input_vec = vec!{num1, num2};
+        let input_vec = vec!{num1, num2};
 
         let output_vec;
         if num1>num2 {
@@ -175,6 +170,6 @@ fn main() {
         }
         //println!("\n");
     }
-    println!("Ratio: {}/{}", correct_counter, input_data.input_data.len());
+    println!("Ratio: {}/{}", correct_counter, number_of_samples);
     println!("Learning time: {:?}", duration);
 }
