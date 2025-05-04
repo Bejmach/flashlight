@@ -8,6 +8,7 @@ use std::time::Instant;
 pub struct NewModel{
     linear1: Linear,
     linear2: Linear,
+    linear3: Linear,
     activation: Relu,
     output_activation: Sigmoid,
 }
@@ -17,8 +18,9 @@ pub struct NewModel{
 impl NewModel{
     fn new() -> Self{
         Self{
-            linear1: Linear::new(2, 16, 0.01),
-            linear2: Linear::new(16, 1, 0.01),
+            linear1: Linear::new(2, 16, 0.001),
+            linear2: Linear::new(16, 16, 0.001),
+            linear3: Linear::new(16, 1, 0.001),
             activation: Relu::new(),
             output_activation: Sigmoid::new(),
         }
@@ -33,12 +35,16 @@ impl Model for NewModel{
         let x = self.linear1.forward(&input);
         let x = self.activation.forward(&x);
         let x = self.linear2.forward(&x);
+        let x = self.activation.forward(&x);
+        let x = self.linear3.forward(&x);
         
         self.output_activation.forward(&x)
     }
     fn backward(&mut self, grad_output: Tensor<f32>) {
         let x = self.output_activation.backward(&grad_output);
 
+        let x = self.linear3.backward(&x);
+        let x = self.activation.backward(&x);
         let x = self.linear2.backward(&x);
         let x = self.activation.backward(&x);
         self.linear1.backward(&x);
@@ -46,6 +52,8 @@ impl Model for NewModel{
 }
 
 fn main() {
+    let number_of_epochs = 1000;
+
     let mut rng = rand::rng();
     let mut input_vec = vec!{-100.0, 100.0};
 
@@ -111,7 +119,7 @@ fn main() {
     }
     println!("Ratio: {}/{}", correct_counter, input_data.input_data.len());
 
-    let number_of_epochs = 100;
+    
 
     let start = Instant::now();
     for epoch in 0..=number_of_epochs{
@@ -150,10 +158,10 @@ fn main() {
         let input_data = Tensor::from_data(&input_vec, &[2, 1]).unwrap();
         let output_data = model.forward(input_data.clone());
 
-        println!("Sample {}", i);
-        println!("Data: {}", input_data.matrix_transpose().unwrap().matrix_to_string().unwrap());
-        println!("Expected: {}", output_vec[0]);
-        println!("Output: {}", output_data.matrix_to_string().unwrap());
+        //println!("Sample {}", i);
+        //println!("Data: {}", input_data.matrix_transpose().unwrap().matrix_to_string().unwrap());
+        //println!("Expected: {}", output_vec[0]);
+        //println!("Output: {}", output_data.matrix_to_string().unwrap());
         if output_vec[0] == 1.0 && output_data.get_data()[0] > 0.5 {
                 //println!("correct");
                 correct_counter += 1;

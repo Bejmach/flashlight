@@ -23,18 +23,34 @@ pub fn cross_entropy_cost(y_hat: &Tensor<f32>, y: &Tensor<f32>) -> Option<f32>{
         }  
     }
 
+    let mut y_hat_fixed_data: Vec<f32> = Vec::with_capacity(y_hat.count_data());
+
+    for i in 0..y_hat.get_data().len(){
+        if y_hat.get_data()[i] == 1.0{
+            y_hat_fixed_data.push(0.999999);
+        }
+        else if y_hat.get_data()[i] == 0.0{
+            y_hat_fixed_data.push(0.000001);
+        }
+        else {
+            y_hat_fixed_data.push(y_hat.get_data()[i]);
+        }
+    }
+
+    let y_hat_fixed: Tensor<f32> = Tensor::from_data(&y_hat_fixed_data, y_hat.get_sizes()).unwrap();
+
     let tensor_ones: Tensor<f32> = Tensor::fill(1.0, y_hat.get_sizes());
     
     //(y * log(y_hat))
-    let y_log_y_hat: Tensor<f32> = y.tens_mul(&y_hat.nlog()).unwrap();
+    let y_log_y_hat: Tensor<f32> = y.tens_mul(&y_hat_fixed.nlog()).unwrap();
     //(1 - y)
     let negative_y: Tensor<f32> = tensor_ones.tens_sub(&y).unwrap();
     //log(1 - y_hat)
-    let log_negative_y_hat: Tensor<f32> = tensor_ones.tens_sub(&y_hat).unwrap().nlog();
+    let log_negative_y_hat: Tensor<f32> = tensor_ones.tens_sub(&y_hat_fixed).unwrap().nlog();
 
     let losses: Tensor<f32> = y_log_y_hat.tens_add( &negative_y.tens_mul(&log_negative_y_hat).unwrap() ).unwrap();
 
-    let m: usize = y_hat.count_data();
+    let m: usize = y_hat_fixed.count_data();
 
     let const_multiplier = 1.0/m as f32;
 
