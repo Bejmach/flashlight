@@ -1,0 +1,12 @@
+weights = weights - relu.input_cache.relu_der.tens_broadcast_mul(grad_output).matmul(linear.input_cache.transposed());
+
+weights[i] = weights[i] - dot(relu.input_cache.relu_der.tens_broadcast_mul(grad_output).row(row), linear.input_cache.row(col));
+
+var sum = 0.0;
+for i in 0..relu_shapes.row{
+	sum += relu_der(relu.input_cache[x]) + grad_output[shape.row] * linear.input_cache[i.toShape().swapParams().toIdx];
+}
+
+output[i] = input[i] - sum;
+
+shape[row, col] = i.toShape(weights_shape);
