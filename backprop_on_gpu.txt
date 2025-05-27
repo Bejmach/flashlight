@@ -1,3 +1,4 @@
+weights
 weights = weights - relu.input_cache.relu_der.tens_broadcast_mul(grad_output).matmul(linear.input_cache.transposed());
 
 weights[i] = weights[i] - dot(relu.input_cache.relu_der.tens_broadcast_mul(grad_output).row(row), linear.input_cache.row(col));
@@ -10,3 +11,9 @@ for i in 0..relu_shapes.row{
 output[i] = input[i] - sum;
 
 shape[row, col] = i.toShape(weights_shape);
+
+biases
+output[i] = relu_der(relu.input_cache[x])*grad_output * 1/shapes[1](samples_per_batch)
+
+grad
+output[i] = weights^T.matmul(relu_der(relu.input_cache[x])) -> for(i in weights.row) sum += weights[i.col][i.row] * relu_der(relu.input_cache[i.row][i.col])
