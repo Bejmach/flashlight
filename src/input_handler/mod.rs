@@ -2,14 +2,14 @@ use flashlight_tensor::prelude::*;
 
 use rand::seq::SliceRandom;
 
-pub struct Sample{
+pub struct DataSample{
     pub input_data: Tensor<f32>,
     pub output_data: Tensor<f32>,
 }
 
 /// Work in progress, will be made for like 0.0.15 hopefully
 pub struct DataPreparaton{
-    pub data: Vec<Sample>,
+    pub data: Vec<DataSample>,
     bach_size: u32,
 }
 
@@ -33,7 +33,7 @@ impl DataPreparaton{
         }
     }
     pub fn append(&mut self, input_sample: &Tensor<f32>, output_sample: &Tensor<f32>){
-        self.data.push(Sample{
+        self.data.push(DataSample{
             input_data: input_sample.clone(),
             output_data: output_sample.clone(),
         });
@@ -53,7 +53,7 @@ impl DataPreparaton{
         let mut normalized_data: Vec<f32> = Vec::with_capacity(input_tensor.count_data());
 
         //collums holds same element in each sample, so I use normalization across collumns
-        for i in 0..input_tensor.get_sizes()[1]{
+        for i in 0..input_tensor.get_shape()[1]{
             let input_col = input_tensor.matrix_col(i).unwrap();
 
             let col_mean: f32 = input_col.sum() / input_col.count_data() as f32;
@@ -74,7 +74,7 @@ impl DataPreparaton{
             }
         }
 
-        let normalized_tensor: Tensor<f32> = Tensor::from_data(&normalized_data, &[input_tensor.get_sizes()[1], input_tensor.get_sizes()[0]]).unwrap().matrix_transpose().unwrap();
+        let normalized_tensor: Tensor<f32> = Tensor::from_data(&normalized_data, &[input_tensor.get_shape()[1], input_tensor.get_shape()[0]]).unwrap().matrix_transpose().unwrap();
 
         let mut output_tensor = self.data[0].output_data.clone();
         for i in 1..self.data.len(){
@@ -92,7 +92,7 @@ impl DataPreparaton{
 impl DataHandler{
 
     pub fn len(&self) -> u32{
-        self.input_data.get_sizes()[0] / self.bach_size
+        self.input_data.get_shape()[0] / self.bach_size
     }
     pub fn input_bach(&self, n: u32) -> Tensor<f32>{
         let mut bach = self.input_data.matrix_row(n*self.bach_size).unwrap();

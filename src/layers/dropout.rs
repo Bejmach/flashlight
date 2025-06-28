@@ -41,11 +41,11 @@ impl Dropout{
         let mut tensor_copy = tensor.clone();
 
         let mut rng = rand::rng();
-        let neuron_size = tensor_copy.get_sizes()[1];
+        let neuron_size = tensor_copy.get_shape()[1];
 
         let dropped_neurons = ((neuron_size as f32) * self.dropout) as u32;
 
-        for sample in 0..tensor_copy.get_sizes()[0]{
+        for sample in 0..tensor_copy.get_shape()[0]{
             for i in 0..dropped_neurons{
                 let rand_neuron = rng.random_range(0..neuron_size);
                 

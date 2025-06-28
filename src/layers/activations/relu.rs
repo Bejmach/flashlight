@@ -1,6 +1,6 @@
 use flashlight_tensor::tensor::Tensor;
 
-use crate::layers::Layer;
+use crate::layers::LayerCpu;
 
 /// ReLU activation layer
 pub struct Relu{
@@ -18,7 +18,7 @@ impl Relu{
     }
 }
 
-impl Layer for Relu{
+impl LayerCpu for Relu{
     /// Forward propagation for sigmoid layer
     fn forward(&mut self, input: &Tensor<f32>) -> Tensor<f32> {
         self.input_cache.push(input.clone());
@@ -30,6 +30,6 @@ impl Layer for Relu{
             panic!();
         }
 
-        self.input_cache.pop().unwrap().relu_der().matrix_transpose().unwrap().tens_broadcast_mul(grad_output).unwrap().matrix_transpose().unwrap()
+        self.input_cache.pop().unwrap().relu_der().tens_broadcast_mul(grad_output).unwrap()
     }
 }
