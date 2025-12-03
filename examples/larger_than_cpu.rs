@@ -1,4 +1,4 @@
-use flashlight::{layers::Layer, prelude::*};
+use flashlight::{layers::{Cpu, LayerCpu}, prelude::*};
 #[allow(unused)]
 use flashlight_tensor::prelude::*;
 
@@ -6,10 +6,10 @@ use rand::prelude::*;
 use std::time::Instant;
 
 pub struct NewModel{
-    linear1: Linear,
-    linear2: Linear,
-    linear3: Linear,
-    activation: Relu,
+    linear1: Linear<Cpu>,
+    linear2: Linear<Cpu>,
+    linear3: Linear<Cpu>,
+    activation: Relu<Cpu>,
     output_activation: Sigmoid,
 }
 
@@ -18,9 +18,9 @@ pub struct NewModel{
 impl NewModel{
     fn new() -> Self{
         Self{
-            linear1: Linear::new(2, 16, 0.001),
-            linear2: Linear::new(16, 16, 0.001),
-            linear3: Linear::new(16, 1, 0.001),
+            linear1: Linear::new(2, 16, 0.01),
+            linear2: Linear::new(16, 16, 0.01),
+            linear3: Linear::new(16, 1, 0.01),
             activation: Relu::new(),
             output_activation: Sigmoid::new(),
         }
@@ -30,7 +30,7 @@ impl NewModel{
     }
 }
 
-impl Model for NewModel{
+impl ModelCpu for NewModel{
     fn forward(&mut self, input: Tensor<f32>) -> Tensor<f32> {
         let x = self.linear1.forward(&input);
         let x = self.activation.forward(&x);
@@ -52,8 +52,8 @@ impl Model for NewModel{
 }
 
 fn main() {
-    let number_of_epochs = 10000;
-    let number_of_samples = 1000;
+    let number_of_epochs = 100;
+    let number_of_samples = 100;
     let bach_size = 100;
 
     let mut input_data: DataPreparaton = DataPreparaton::new();
@@ -76,7 +76,7 @@ fn main() {
         //println!("Input: {}, {}", input_vec[0], input_vec[1]);
 
         //print!("Output: ");
-        for i in 0..output_vec.len(){
+        for _i in 0..output_vec.len(){
             //print!("{}", output_vec[i]);
         }
         //println!("");
@@ -138,7 +138,7 @@ fn main() {
 
     let mut correct_counter: u32 = 0;
 
-    for i in 0..number_of_samples{
+    for _i in 0..number_of_samples{
         let num1 = rng.random_range(-100.0..100.0);
         let num2 = rng.random_range(-100.0..100.0);
         let input_vec = vec!{num1, num2};
@@ -153,11 +153,11 @@ fn main() {
         let input_data = Tensor::from_data(&input_vec, &[2, 1]).unwrap();
         let output_data = model.forward(input_data.clone());
 
-        //println!("Sample {}", i);
+        //println!("Sample {}", _i);
         //println!("Data: {}", input_data.matrix_transpose().unwrap().matrix_to_string().unwrap());
         //println!("Expected: {}", output_vec[0]);
         //println!("Output: {}", output_data.matrix_to_string().unwrap());
-        if output_vec[0] == 1.0 && output_data.get_data()[0] > 0.5 {
+        if output_vec[0] == 1.0 && output_data.get_data()[0] >= 0.5 {
                 //println!("correct");
                 correct_counter += 1;
         }

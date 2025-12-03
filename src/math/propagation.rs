@@ -13,7 +13,7 @@ use flashlight_tensor::prelude::*;
 /// let network_cost = cross_entropy_cost(&y_hat, &y).unwrap();
 /// ```
 pub fn cross_entropy_cost(y_hat: &Tensor<f32>, y: &Tensor<f32>) -> Option<f32>{
-    if y_hat.get_sizes() != y.get_sizes(){
+    if y_hat.get_shape() != y.get_shape(){
         return None;
     }
 
@@ -37,9 +37,9 @@ pub fn cross_entropy_cost(y_hat: &Tensor<f32>, y: &Tensor<f32>) -> Option<f32>{
         }
     }
 
-    let y_hat_fixed: Tensor<f32> = Tensor::from_data(&y_hat_fixed_data, y_hat.get_sizes()).unwrap();
+    let y_hat_fixed: Tensor<f32> = Tensor::from_data(&y_hat_fixed_data, y_hat.get_shape()).unwrap();
 
-    let tensor_ones: Tensor<f32> = Tensor::fill(1.0, y_hat.get_sizes());
+    let tensor_ones: Tensor<f32> = Tensor::fill(1.0, y_hat.get_shape());
     
     //(y * log(y_hat))
     let y_log_y_hat: Tensor<f32> = y.tens_mul(&y_hat_fixed.nlog()).unwrap();
@@ -56,7 +56,7 @@ pub fn cross_entropy_cost(y_hat: &Tensor<f32>, y: &Tensor<f32>) -> Option<f32>{
 
     let mut summed_losses: f32 = 0.0;
 
-    for i in 0..losses.get_sizes()[0]{
+    for i in 0..losses.get_shape()[0]{
         summed_losses += const_multiplier * losses.matrix_row(i).unwrap().sum();
     }
 

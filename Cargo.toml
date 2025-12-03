@@ -1,9 +1,9 @@
 [package]
 name = "flashlight"
-version = "0.0.11"
+version = "0.0.12"
 edition = "2024"
 authors = ["Maciej Bejmowicz <bejmach@gmail.com>"]
-description = "neural network library,*not* abandoned"
+description = "neural network library"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/Bejmach/flashlight"
@@ -11,4 +11,6 @@ homepage = "https://github.com/Bejmach/flashlight"
 
 [dependencies]
 rand = "0.9.1"
-flashlight_tensor = "0.2.6"
+flashlight_tensor = "0.4.5"
+async-trait = "0.1.88"
+tokio = { version = "1.45.0", features = ["full"] }
