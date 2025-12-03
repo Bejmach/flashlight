@@ -10,7 +10,7 @@ pub struct NewModel{
     linear1: Linear<Gpu>,
     linear2: Linear<Gpu>,
     linear3: Linear<Gpu>,
-    activation: Relu,
+    activation: Relu<Cpu>,
     output_activation: Sigmoid,
 }
 
@@ -124,29 +124,51 @@ async fn main() {
 
     model.clear_buffers();
 
+    //learning time
     let start = Instant::now();
+
+    let mut forward_duration: std::time::Duration = std::time::Duration::new(0, 0);
+    let mut backward_duration: std::time::Duration = std::time::Duration::new(0, 0);
+    let mut clear_duration: std::time::Duration = std::time::Duration::new(0, 0);
+    let mut cpu_duration: std::time::Duration = std::time::Duration::new(0, 0);
+
     for epoch in 0..=number_of_epochs{
     
         let mut cost_sum: f32 = 0.0;
 
         for i in 0..handler.len(){
-            let output = model.forward(handler.input_bach(i)).await;
-            
-            let grad_output = model.grad_output(&handler.output_bach(i));
+            let start = Instant::now();
+            let input_bach = handler.input_bach(i);
+            let output_bach = &handler.output_bach(i);
+            cpu_duration += start.elapsed();
 
+            let start = Instant::now();
+            let output = model.forward(input_bach).await;
+            forward_duration += start.elapsed();
+
+            let start = Instant::now();
+            let grad_output = model.grad_output(output_bach);
+            cpu_duration += start.elapsed();
+
+            let start = Instant::now();
             model.backward(grad_output).await;
+            backward_duration += start.elapsed();
             
+            let start = Instant::now();
             //println!("{:?}, {:?}", output.get_data(), handler.output_bach(i).get_data());
             cost_sum += cross_entropy_cost(&output, &handler.output_bach(i)).unwrap();
             //println!("{}", cross_entropy_cost(&output, &handler.output_bach(i)).unwrap());
-            
+            cpu_duration += start.elapsed();
+
+            let start = Instant::now();
             model.clear_buffers();
+            clear_duration += start.elapsed();
         }
         if epoch % 10 == 0{
             println!("Epoch {}, Cost: {}", epoch, cost_sum/handler.len() as f32);
         }
     }
-    let duration = start.elapsed();
+    let duration: std::time::Duration = start.elapsed();
 
     let mut correct_counter: u32 = 0;
 
@@ -165,23 +187,24 @@ async fn main() {
         let input_data = Tensor::from_data(&input_vec, &[2, 1]).unwrap();
         let output_data = model.forward(input_data.clone()).await;
 
-        println!("Sample {}", _i);
-        println!("Data: {}", input_data.matrix_transpose().unwrap().matrix_to_string().unwrap());
-        println!("Expected: {}", output_vec[0]);
-        println!("Output: {}", output_data.matrix_to_string().unwrap());
+        //println!("Sample {}", _i);
+        //println!("Data: {}", input_data.matrix_transpose().unwrap().matrix_to_string().unwrap());
+        //println!("Expected: {}", output_vec[0]);
+        //println!("Output: {}", output_data.matrix_to_string().unwrap());
         if output_vec[0] == 1.0 && output_data.get_data()[0] >= 0.5 {
-                println!("correct");
+                //println!("correct");
                 correct_counter += 1;
         }
         else if output_vec[0] == 0.0 && output_data.get_data()[0] < 0.5 {
-                println!("correct");
+                //println!("correct");
                 correct_counter += 1;
         }
         else {
-            println!("WRONG");
+            //println!("WRONG");
         }
-        println!("\n");
+        //println!("\n");
     }
     println!("Ratio: {}/{}", correct_counter, number_of_samples);
     println!("Learning time: {:?}", duration);
+    println!("Forward time: {:?}\nBackward time: {:?}\nClear time: {:?}\nCpu time: {:?}", forward_duration, backward_duration, clear_duration, cpu_duration);
 }

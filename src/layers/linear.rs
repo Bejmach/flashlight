@@ -4,15 +4,7 @@ use flashlight_tensor::prelude::*;
 use rand::Rng;
 use async_trait::async_trait;
 
-use crate::{layers::{LayerCpu, LayerGpu}, prelude::xavier_weights};
-
-pub trait Backend{
-    fn forward(&mut self, input: Tensor<f32>){}
-    fn backward(&mut self, grad_output: Tensor<f32>){}
-}
-
-pub struct Cpu;
-pub struct Gpu;
+use crate::{layers::{LayerCpu, LayerGpu, Backend, Cpu, Gpu}, prelude::xavier_weights};
 
 pub trait Dtype: Copy + 'static {
     fn from_f32(f: f32) -> Self;
@@ -58,6 +50,31 @@ impl<B> Linear<B>{
         Self{
             weights: Tensor::rand(rand_range, &[output_size, input_size]),
             biases: Tensor::rand(rand_range, &[output_size, 1]),
+            learning_rate,
+            input_cache: None,
+
+            forward_runner: None,
+
+            backward_weights_runner: None,
+            backward_bias_runner: None,
+            backward_runner: None,
+
+            _marker: PhantomData,
+        }
+    }
+
+    pub fn with_weights_and_bias(weights: Tensor<f32>, biases: Tensor<f32>, learning_rate: f32) -> Self{
+        if weights.get_shape()[0] != biases.get_shape()[0]{
+            panic!("weights and biases does not match");
+        }
+
+        if biases.get_shape()[1] != 1{
+            panic!("biases needs shape[1] = 1");
+        }
+
+        Self{
+            weights,
+            biases,
             learning_rate,
             input_cache: None,
 
@@ -120,7 +137,7 @@ impl LayerGpu for Linear<Gpu>{
 
         self.input_cache = Some(data.clone());
 
-        let sample = Sample::from_data(vec!{self.weights.clone(), data.clone()}, vec!{}, &[]);
+        let sample = Sample::from_data(vec!{self.weights.clone(), data.clone(), self.biases.clone()}, vec!{}, &[]);
 
         if(self.forward_runner.is_none()){
             self.forward_runner = Some(GpuRunner::init(2, MemoryMetric::GB));

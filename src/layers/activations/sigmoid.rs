@@ -39,6 +39,6 @@ impl LayerCpu for Sigmoid{
             panic!();
         }
 
-        grad_output.tens_mul(&self.input_cache.pop().unwrap().sigmoid_der()).unwrap()
+        self.input_cache.pop().unwrap().sigmoid_der().tens_broadcast_mul(grad_output).unwrap()
     }
 }

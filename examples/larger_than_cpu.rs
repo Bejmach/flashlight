@@ -1,4 +1,4 @@
-use flashlight::{layers::LayerCpu, prelude::*};
+use flashlight::{layers::{Cpu, LayerCpu}, prelude::*};
 #[allow(unused)]
 use flashlight_tensor::prelude::*;
 
@@ -9,7 +9,7 @@ pub struct NewModel{
     linear1: Linear<Cpu>,
     linear2: Linear<Cpu>,
     linear3: Linear<Cpu>,
-    activation: Relu,
+    activation: Relu<Cpu>,
     output_activation: Sigmoid,
 }
 
@@ -153,22 +153,22 @@ fn main() {
         let input_data = Tensor::from_data(&input_vec, &[2, 1]).unwrap();
         let output_data = model.forward(input_data.clone());
 
-        println!("Sample {}", _i);
-        println!("Data: {}", input_data.matrix_transpose().unwrap().matrix_to_string().unwrap());
-        println!("Expected: {}", output_vec[0]);
-        println!("Output: {}", output_data.matrix_to_string().unwrap());
+        //println!("Sample {}", _i);
+        //println!("Data: {}", input_data.matrix_transpose().unwrap().matrix_to_string().unwrap());
+        //println!("Expected: {}", output_vec[0]);
+        //println!("Output: {}", output_data.matrix_to_string().unwrap());
         if output_vec[0] == 1.0 && output_data.get_data()[0] >= 0.5 {
-                println!("correct");
+                //println!("correct");
                 correct_counter += 1;
         }
         else if output_vec[0] == 0.0 && output_data.get_data()[0] < 0.5 {
-                println!("correct");
+                //println!("correct");
                 correct_counter += 1;
         }
         else {
-            println!("WRONG");
+            //println!("WRONG");
         }
-        println!("\n");
+        //println!("\n");
     }
     println!("Ratio: {}/{}", correct_counter, number_of_samples);
     println!("Learning time: {:?}", duration);

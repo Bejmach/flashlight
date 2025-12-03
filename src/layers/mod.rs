@@ -6,6 +6,14 @@ pub mod dropout;
 
 pub mod activations;
 
+pub trait Backend{
+    fn forward(&mut self, input: Tensor<f32>){}
+    fn backward(&mut self, grad_output: Tensor<f32>){}
+}
+
+pub struct Cpu;
+pub struct Gpu;
+
 /// Basic layer trait for layers
 pub trait LayerCpu {
     /// Forward propagation for layer

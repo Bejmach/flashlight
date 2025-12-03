@@ -8,6 +8,8 @@
 
 > project not related to similarly named [flashlight](https://github.com/flashlight/flashlight). The name was coincidental and chosen independently.
 
+## Quick info
+I stopped developing this project for now, because I dont have time nor do I want to do that. There are already well developed libraries for that. I started that to learn how does AI work under the hood, and well... at least I know why I hate it so much. Maybe I will try to work on that project in the future, but that would require me to rewrite some of the core legacy code that is a pile of garbage, that I do not want to touch (I swear, something is probably living there). For now its all that I want to say. If there is even one person reading this, that was using this pile of garbage, I have one thing to say. Why the fu\*k you used this instead of burn?
 
 ## Already done
 - Neural network structure
@@ -28,8 +30,8 @@
 ## Instalation
 ```toml
 [depencencies]
-flashlight = "0.0.11"
-flashlight_tensor = "0.2.6"
+flashlight = "0.0.12"
+flashlight_tensor = "0.4.5"
 ```
 
 ## Documentation
@@ -102,4 +104,6 @@ I literally have no idea what I'm doing here. I just thought one day, "Creating 
   - tbh, nothing much
 - 0.0.11
   - modular model
+- 0.0.12
+  - half working gpu models
 
